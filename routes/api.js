@@ -2,6 +2,8 @@ var express = require('express');
 var request = require('request');
 var router = express.Router();
 
+var com = require('../app/common.js');
+
 
 
 
@@ -13,6 +15,61 @@ var reqOptions = {
     method: 'GET'
 }
 */
+
+
+/* bitfinex */
+
+router.get(['/bitfinex/:coin?/:market?'], function(req, res, next) {
+    console.log("bitfinex");
+    var coin = req.params.coin;
+    var market = req.params.market;
+    coin = (!coin) ? "BTC" : coin.toUpperCase();
+    market = (!market) ? "USD" : market.toUpperCase();
+    var reqUrl = 'https://api.bitfinex.com/v1/pubticker/' + coin + market;
+
+    request(reqUrl, function(err, res, body){
+        console.log(body);
+        if (!err && res.statusCode === 200) {
+            var json = JSON.parse(body);
+            if (!json.message) {
+                console.log(json.last_price);
+            } else {
+                console.log("no such coin.");
+            }
+        }
+    });
+    //request.post('http://service.com/upload', {form:{key:'value'}})
+    //res.json({'a':'1'});
+  res.send('respond with a resource');
+});
+
+router.get(['/bitfinex2/:coin?/:market?'], function(req, res, next) {
+    console.log("bitfinex2");
+    var coin = req.params.coin;
+    var market = req.params.market;
+    coin = (!coin) ? "BTC" : coin.toUpperCase();
+    market = (!market) ? "USD" : market.toUpperCase();
+    var reqUrl = 'https://api.bitfinex.com/v2/tickers?symbols=tETHUSD,tXRPUSD,t' + coin + market;
+
+    request(reqUrl, function(err, res, body){
+        console.log(body);
+        if (!err && res.statusCode === 200) {
+            var json = JSON.parse(body);
+            if (json.length > 0) {
+                json.forEach(function(elem){
+                    if (elem[0] === ('t'+coin+market)) {
+                        console.log(elem[0] + " ~~ " + elem[7]);
+                    }
+                });
+            } else {
+                console.log("no such coin.");
+            }
+        }
+    });
+    //request.post('http://service.com/upload', {form:{key:'value'}})
+    //res.json({'a':'1'});
+  res.send('respond with a resource');
+});
 
 /* BITHUMB */
 /*
@@ -42,9 +99,11 @@ CODE	MESSAGE
 5600	CUSTOM NOTICE (상황별 에러 메시지 출력)
 5900	Unknown Error
 */
-router.get(['/bithumb/:coin/'], function(req, res, next) {
+router.get(['/bithumb/:coin?/'], function(req, res, next) {
     console.log("bithumb");
     var coin = req.params.coin;
+    coin = (!coin) ? "BTC" : coin.toUpperCase();
+    console.log(coin);
     var reqUrl = 'https://api.bithumb.com/public/ticker/' + coin;
 
     request(reqUrl, function(err, res, body){
@@ -58,6 +117,7 @@ router.get(['/bithumb/:coin/'], function(req, res, next) {
         }
     });
     //request.post('http://service.com/upload', {form:{key:'value'}})
+    //res.json({'a':'1'});
   res.send('respond with a resource');
 });
 
@@ -83,10 +143,13 @@ router.get(['/bithumb/:coin/'], function(req, res, next) {
 /* ERROR_MSG
 []
 */
-router.get(['/upbit/:coin'], function(req, res, next) {
+router.get(['/upbit/:coin?/:market?'], function(req, res, next) {
     console.log("upbit");
     var coin = req.params.coin;
-    var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/candles/days?code=CRIX.UPBIT.KRW-' + coin;
+    var market = req.params.market;
+    coin = (!coin) ? "BTC" : coin.toUpperCase();
+    market = (!market) ? "KRW" : market.toUpperCase();
+    var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/candles/days?code=CRIX.UPBIT.' + market + '-' + coin;
 
     request(reqUrl, function(err, res, body){
         
@@ -94,7 +157,13 @@ router.get(['/upbit/:coin'], function(req, res, next) {
             console.log(body);
             var json = JSON.parse(body);
             if (json.length > 0) {
-                console.log(json[0].tradePrice);
+                var tradePrice = json[0].tradePrice;
+                if (market === 'BTC') {
+                    tradePrice = com.toSatoshiFormat(tradePrice);
+                }
+                console.log(tradePrice);
+            } else {
+                console.log("no such coin.");
             }
         }
     });
@@ -102,13 +171,16 @@ router.get(['/upbit/:coin'], function(req, res, next) {
 });
 
 
-router.get(['/binance/:coin'], function(req, res, next) {
+router.get(['/binance'], function(req, res, next) {
     console.log("binance");
     var coin = req.params.coin;
+    var market = req.params.market;
+    coin = (!coin) ? "BTC" : coin.toUpperCase();
+    market = (!market) ? "USDT" : market.toUpperCase();
     var reqUrl = 'https://api.binance.com/api/v1/ticker/24hr';
 
     request(reqUrl, function(err, res, body){
-        
+        console.log(err);
         if (!err && res.statusCode === 200) {
             console.log(body);
             var json = JSON.parse(body);
@@ -122,6 +194,113 @@ router.get(['/binance/:coin'], function(req, res, next) {
     res.send('respond with a resource');
 });
 
+
+/* ERROR_MSG
+0	No Error
+3	내부 서버 오류
+9	예상치 못한 서버 오류
+4	잔액 부족으로 거래 실패
+101	파라미터 값이 없음.
+102	회원 정보를 찾을 수 없음. API Key 확인 필요
+103	정지 계정.
+104	거래 제한 계정.
+105	인증실패 이메일, 휴대폰 본인인증 확인 필요
+110	파라미터 오류. 입력값 확인 필요
+111	인증 실패. API Key 확인 필요
+112	Access Key의 권한이 부족함.
+311	일일 이체한도 초과
+312	월 이체한도 초과
+313	최소 출금액 보다 출금요청액이 적을 경우
+314	원화 입금 후 3일동안 코인출금 불가능
+320	출금 계좌 미등록
+999	제한된 횟수를 초과하여 호출하였을 경우.
+퍼블릭 API 의 경우 1초에 20회 제한
+프라이빗 API 의 경우 1초에 10회 제한
+위 제한 횟수를 어길경우 5분간 정지 되어집니다.
+*/
+router.get(['/coinrail/:coin?/:market?'], function(req, res, next) {
+    console.log("coinrail");
+    var coin = req.params.coin;
+    var market = req.params.market;
+    coin = (!coin) ? "btc" : coin.toLowerCase();
+    market = (!market) ? "krw" : market.toLowerCase();
+    var reqUrl = 'https://api.coinrail.co.kr/public/last/order?currency=' + coin + "-" + market;
+
+    request(reqUrl, function(err, res, body){
+        
+        if (!err && res.statusCode === 200) {
+            console.log(body);
+            var json = JSON.parse(body);
+            if (json.error_code === 0) {
+                console.log(json.last_price);
+            } else {
+                console.log("no such coin.");
+            }
+        }
+    });
+    res.send('respond with a resource');
+});
+
+
+
+router.get(['/gate/:coin?/:market?'], function(req, res, next) {
+    console.log("gate.io");
+    var coin = req.params.coin;
+    var market = req.params.market;
+    coin = (!coin) ? "btc" : coin.toLowerCase();
+    market = (!market) ? "usdt" : market.toLowerCase();
+    var reqUrl = 'https://data.gate.io/api2/1/ticker/' + coin + "_" + market;
+
+    request(reqUrl, function(err, res, body){
+        
+        if (!err && res.statusCode === 200) {
+            console.log(body);
+            var json = JSON.parse(body);
+            if (json.result === 'true') {
+                console.log(json.last);
+            } else {
+                console.log("no such coin.");
+            }
+        }
+    });
+    res.send('respond with a resource');
+});
+
+
+/*
+btc,bch,btg,bcd,ubtc,ltc,eth,etc,ada,qtum,xlm,neo,gas,rpx,hsr,knc,tsl,tron,omg,wtc,mco,storm,gto,pxs,chat,ink,hlc,ent,qbt,spc,put (Default: btc)
+limitation : 12 / 1s
+*/
+/*
+Code   Description
+100    Access is blocked. For example, black name list.
+101    Too frequent access.
+102    Parameter error. Required parameters are missing or in wrong format.
+104    Try to access an api using keys without enough privileges.
+105    Failed to validate the signature.
+106    The user is in black name list.
+200    System error. Please refer to the msg content and seek for technical support.
+*/
+router.get(['/coinnest/:coin?/:market?'], function(req, res, next) {
+    console.log("coinnest");
+    var coin = req.params.coin;
+    coin = (!coin) ? "btc" : coin.toLowerCase();
+    var reqUrl = 'https://api.coinnest.co.kr/api/pub/ticker?coin=' + coin;
+
+    request(reqUrl, function(err, res, body){
+        
+        if (!err && res.statusCode === 200) {
+            console.log(body);
+            if (body.startsWith('{')) {
+                var json = JSON.parse(body);
+                console.log(json.last);
+            } else {
+                console.log("no such coin.");
+            }
+        }
+    });
+    res.send('respond with a resource');
+});
 
 module.exports = router;
 
