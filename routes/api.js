@@ -292,11 +292,36 @@ router.get(['/coinnest/:coin?/:market?'], function(req, res, next) {
         if (!err && res.statusCode === 200) {
             console.log(body);
             if (body.startsWith('{')) {
-                var json = JSON.parse(body);
+                var json = JSON.parse(body);0000000000
                 console.log(json.last);
             } else {
                 console.log("no such coin.");
             }
+        }
+    });
+    res.send('respond with a resource');
+});
+
+/*
+{"success":0,"error":"not available"}
+{"success":0,"error":"Invalid pair name: TAAS_ETH"}
+*/
+router.get(['/liqui/:coin?/:market?'], function(req, res, next) {
+    console.log("liqui.io");
+    var coin = req.params.coin;
+    var market = req.params.market;
+    coin = (!coin) ? "taas" : coin.toLowerCase();
+    market = (!market) ? "eth" : market.toLowerCase();
+    var reqUrl = 'https://api.liqui.io/api/3/ticker/' + coin + "_" + market;
+
+    request(reqUrl, function(err, res, body){
+        
+        if (!err && res.statusCode === 200) {
+            console.log(body);
+            var json = JSON.parse(body);
+            json.forEach(function(elem) {
+                    console.log(elem);
+             });                
         }
     });
     res.send('respond with a resource');
