@@ -143,6 +143,7 @@ router.get(['/bithumb/:coin?/'], function(req, res, next) {
 /* ERROR_MSG
 []
 */
+// $('#root > div > div > div.mainB > section.ty02 > article:nth-child(2) > span.tabB > div > div > div > div:nth-child(1) > table > tbody > tr:nth-child(35) > td.tit > em').text();
 router.get(['/upbit/:coin?/:market?'], function(req, res, next) {
     console.log("upbit");
     var coin = req.params.coin;
