@@ -19,6 +19,9 @@ const mongoose = require('./app/mongo');
 //----------------------------------------------------------
 
 // [start MongoDB]
+// mongoose 기본 promise를 node의 promise로 교체
+// mongoose.Promise = require('bluebird');
+mongoose.Promise = global.Promise;
 mongoose();
 
 var app = express();

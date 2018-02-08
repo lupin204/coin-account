@@ -18,6 +18,7 @@ const marketSchema = new Schema({
     coin: {type: String, required: true},   // BTC
     market: {type: String, required: true}, // KRW
     pair: { type: String, required: true},  // BTC/KRW
+    created: { type: String, required:true },   //20180206150000
     createdDate: {type: Date, required: true, default: Date.now }
 });
 

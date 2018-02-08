@@ -2,10 +2,175 @@ var express = require('express');
 var request = require('request');
 var router = express.Router();
 
+// temp
+const cheerio = require('cheerio');
+const Market = require('../models/market');
+const async = require('async');
+// temp end
+
+
 var com = require('../app/common.js');
 
 const Exchange = require('../models/exchange');
 const moment = require('moment');
+
+
+router.get(['/test'], function(req, res, next) {
+    Market.find(function(err, markets) {
+        markets.forEach(function(market){
+
+            var reqUrl = 'https://coinmarketcap.com/exchanges/upbit/';
+            var createdDate = moment().format('YYYYMMDD');
+
+            request(reqUrl, function(err, res, body){
+                if (!err && res.statusCode === 200) {
+                    var $ = cheerio.load(body);
+                    var coinCnt = $('#exchange-markets > tbody > tr').length;
+        
+                    for (var i=1; i<=coinCnt; i++) {
+                        var elem = $('#exchange-markets > tbody > tr:nth-child('+i+') > td:nth-child(3) > a').text();
+
+                        if (market.pair )
+
+                        var coin = elem.split('/')[0];
+                        var market = elem.split('/')[1];
+        
+                        var marketCollection = new Market();
+                        marketCollection.source = 'Upbit';
+                        marketCollection.coin = coin;
+                        marketCollection.market = market;
+                        marketCollection.pair = elem;
+                        marketCollection.created = createdDate;
+        
+                        marketCollection.save(function(err, marketCollection){
+                            if(err) {
+                                console.error(err);
+                            }
+                        });
+                    }
+                }
+            });
+
+            console.log(elem.coin);
+            console.log("~~~~~~~~~~~~~");
+        });
+    }).where('source').equals('Upbit').select('-_id pair');
+
+/*
+    source: { type: String, required: true},    // Upbit
+    coin: {type: String, required: true},   // BTC
+    market: {type: String, required: true}, // KRW
+    pair: { type: String, required: true},  // BTC/KRW
+    updated: { type: String, required:true },   //20180206150000
+*/
+    res.send('respond with a resource');
+});
+
+
+router.get(['/test2'], function(req, res, next) {
+    console.log("test2222");
+    var reqUrl = 'https://coinmarketcap.com/exchanges/upbit/';
+    var createdDate = moment().format('YYYYMMDD');
+    var coinmarketcaps = [];
+
+    var tasks = [
+        function(callback){
+            Market.find()
+            .where('source').equals('Upbit').select('pair')
+            .then(function(markets) {
+                console.log(markets.length);
+                var marketArray = [];
+                for (var i=0; i<markets.length; i++) {
+                    marketArray[i] = markets[i].pair;
+                }
+                console.log(marketArray);
+                callback(null, marketArray);
+            })
+            .catch(function(err){
+                console.error(err);
+            });
+        },
+
+        function(marketArray, callback){
+            console.log(marketArray);
+            request(reqUrl, function(err, res, body){
+                if (!err && res.statusCode === 200) {
+                    var $ = cheerio.load(body);
+                    var coinCnt = $('#exchange-markets > tbody > tr').length;
+                    for (var i=1; i<=coinCnt; i++) {
+                        var elem = $('#exchange-markets > tbody > tr:nth-child('+i+') > td:nth-child(3) > a').text();
+                        if (marketArray.indexOf(elem) > -1) {
+                            marketArray.pop(elem);
+                        } else {
+                            console.log(elem);
+                        }
+                    }
+                    callback(null, marketArray);
+                }
+            });
+        }
+    ];
+
+
+    async.waterfall(tasks, function (err, result) {
+        if (err) {
+            console.log(err);
+        } else {
+           console.log(result.length);
+        }
+      });
+
+    
+
+    res.send('respond with a resource');
+});
+
+router.get(['/test3'], function(req, res, next) {
+
+    var aaa = 'aaa';
+    var bbb = 'bbb';
+
+    var tasks = [
+        function(callback){
+            console.log("1111111111111111111111");
+            console.log(aaa);
+            aaa += 'aaa1';
+            console.log(callback);
+          callback(null, '하나', '둘');
+        },
+        function(arg1, arg2, callback){
+            console.log("2222222222222222");
+            console.log(bbb);
+          // arg1는 '하나'고, arg2는 '둘'이다.
+          console.log(arg1);
+          console.log(arg2);
+          console.log(callback);
+          callback(null, '셋');
+        },
+        function(arg1, callback){
+            console.log("333333333333333");
+          // arg1은 '셋'이다.
+          console.log(arg1);
+          console.log(callback);
+          callback(null, '끝');
+        }
+      ];
+
+    async.waterfall(tasks, function (err, result) {
+        // result에는 '끝'이 담겨 온다.
+        if (err)
+        console.log(err);
+        else {
+        console.log(result);
+        console.log(aaa);
+        }
+      });
+
+      console.log(aaa);
+
+
+    res.send('respond with a resource');
+});
 
 
 /*

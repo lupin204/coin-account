@@ -62,7 +62,7 @@ var exchangeJob = schedule.scheduleJob('* 1  * * *', function(){
 });
 
 
-var crawlingCoins = schedule.scheduleJob('50 * * * * *', function(){
+var crawlingCoins = schedule.scheduleJob('* * * * * 1', function(){
     console.log('crawling coinmarketcap');
     var reqUrl = 'https://coinmarketcap.com/exchanges/upbit/';
 
@@ -70,6 +70,8 @@ var crawlingCoins = schedule.scheduleJob('50 * * * * *', function(){
         if (!err && res.statusCode === 200) {
             var $ = cheerio.load(body);
             var coinCnt = $('#exchange-markets > tbody > tr').length;
+            var createdDate = moment().format('YYYYMMDD');
+
             for (var i=1; i<=coinCnt; i++) {
                 var elem = $('#exchange-markets > tbody > tr:nth-child('+i+') > td:nth-child(3) > a').text();
                 var coin = elem.split('/')[0];
@@ -80,6 +82,7 @@ var crawlingCoins = schedule.scheduleJob('50 * * * * *', function(){
                 marketCollection.coin = coin;
                 marketCollection.market = market;
                 marketCollection.pair = elem;
+                marketCollection.created = createdDate;
 
                 marketCollection.save(function(err, marketCollection){
                     if(err) {
