@@ -61,15 +61,24 @@ var exchangeJob = schedule.scheduleJob('* 1  * * *', function(){
     });
 });
 
-
-var crawlingCoins = schedule.scheduleJob('* * * * * 1', function(){
+/*
+KR bithumb upbit coinone korbit coinrail coinnest
+HK binance bitfinex kucoin okex gate-io 
+us bittrex kraken poloniex gdax
+jp bitflyer
+cn huobi
+etc liqui
+*/
+function insertMarket() {
+    var source = 'bithumb';
+    var reqUrl = 'https://coinmarketcap.com/exchanges/' + source;
     console.log('crawling coinmarketcap');
-    var reqUrl = 'https://coinmarketcap.com/exchanges/upbit/';
 
     request(reqUrl, function(err, res, body){
         if (!err && res.statusCode === 200) {
             var $ = cheerio.load(body);
             var coinCnt = $('#exchange-markets > tbody > tr').length;
+            console.log("["+source+"] "+coinCnt);
             var createdDate = moment().format('YYYYMMDD');
 
             for (var i=1; i<=coinCnt; i++) {
@@ -78,7 +87,7 @@ var crawlingCoins = schedule.scheduleJob('* * * * * 1', function(){
                 var market = elem.split('/')[1];
 
                 var marketCollection = new Market();
-                marketCollection.source = 'Upbit';
+                marketCollection.source = source;
                 marketCollection.coin = coin;
                 marketCollection.market = market;
                 marketCollection.pair = elem;
@@ -92,6 +101,12 @@ var crawlingCoins = schedule.scheduleJob('* * * * * 1', function(){
             }
         }
     });
+}
+
+
+var crawlingCoins = schedule.scheduleJob('30 * * * * *', function(){
+
+
 
 });
 

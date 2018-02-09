@@ -69,21 +69,20 @@ router.get(['/test'], function(req, res, next) {
 
 router.get(['/test2'], function(req, res, next) {
     console.log("test2222");
-    var reqUrl = 'https://coinmarketcap.com/exchanges/upbit/';
+    var reqUrl = 'https://coinmarketcap.com/exchanges/bithumb/';
     var createdDate = moment().format('YYYYMMDD');
     var coinmarketcaps = [];
 
     var tasks = [
         function(callback){
+            console.log("~~~~~~~~~~~~function1111");
             Market.find()
-            .where('source').equals('Upbit').select('pair')
+            .where('source').equals('bithumb').select('pair')
             .then(function(markets) {
-                console.log(markets.length);
                 var marketArray = [];
-                for (var i=0; i<markets.length; i++) {
-                    marketArray[i] = markets[i].pair;
-                }
-                console.log(marketArray);
+                markets.forEach(function(value, index){
+                    marketArray[index] = value.pair;
+                });
                 callback(null, marketArray);
             })
             .catch(function(err){
@@ -92,22 +91,54 @@ router.get(['/test2'], function(req, res, next) {
         },
 
         function(marketArray, callback){
-            console.log(marketArray);
+            console.log("~~~~~~~~~~~~function222");
             request(reqUrl, function(err, res, body){
                 if (!err && res.statusCode === 200) {
                     var $ = cheerio.load(body);
                     var coinCnt = $('#exchange-markets > tbody > tr').length;
+                    var coinmarketcapArray = [];
                     for (var i=1; i<=coinCnt; i++) {
                         var elem = $('#exchange-markets > tbody > tr:nth-child('+i+') > td:nth-child(3) > a').text();
-                        if (marketArray.indexOf(elem) > -1) {
-                            marketArray.pop(elem);
-                        } else {
-                            console.log(elem);
-                        }
+                        coinmarketcapArray.push(elem);
                     }
-                    callback(null, marketArray);
+                    callback(null, marketArray, coinmarketcapArray);
                 }
             });
+        },
+
+        function(marketArray, coinmarketcapArray, callback){
+            console.log("~~~~~~~~~~~~function3333");
+            console.log(marketArray);
+            console.log(coinmarketcapArray);
+            coinmarketcapArray.forEach(function(elem){
+                if (marketArray.indexOf(elem) < 0) {
+                    console.log(elem + " is needed add");
+                    var marketCollection = new Market();
+                    marketCollection.source = 'bithumb';
+                    marketCollection.coin = elem.split('/')[0];
+                    marketCollection.market = elem.split('/')[1];
+                    marketCollection.pair = elem;
+                    marketCollection.created = moment().format('YYYYMMDD');
+    
+                    marketCollection.save(function(err, marketCollection){
+                        if(err) {
+                            console.error(err);
+                        }
+                    });
+                }
+            });
+            marketArray.forEach(function(elem){
+                if (coinmarketcapArray.indexOf(elem) < 0) {
+                    console.log(elem + " is needed delete");
+                    Market.remove({pair: elem}, function(err, result){
+                        if (err) {
+                            console.error(err);
+                        }
+                    });
+                }
+                
+            });
+            callback(null, true);
         }
     ];
 
@@ -116,7 +147,7 @@ router.get(['/test2'], function(req, res, next) {
         if (err) {
             console.log(err);
         } else {
-           console.log(result.length);
+           console.log(result);
         }
       });
 
