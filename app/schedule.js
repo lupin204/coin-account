@@ -1,11 +1,19 @@
+// modules
 const schedule = require("node-schedule");
 const moment = require('moment');
 const request = require('request');
 const cheerio = require('cheerio');
+const async = require('async');
 
-const constants = require('../app/constants');
+// models
 const Exchange = require('../models/exchange');
 const Market = require('../models/market');
+const Ticker = require('../models/ticker');
+
+// user-defined
+const constants = require('../app/constants');
+var com = require('../app/common.js');
+
 
 var rule = new schedule.RecurrenceRule();
 rule.second = 50;
@@ -104,7 +112,7 @@ function insertMarket() {
 }
 
 
-var crawlingCoins = schedule.scheduleJob(' * * * * *', function(){
+var crawlingCoins = schedule.scheduleJob('* * * * * 1', function(){
 
     var reqUrl = 'https://coinmarketcap.com/exchanges/bithumb/';
     var createdDate = moment().format('YYYYMMDD');
@@ -112,7 +120,6 @@ var crawlingCoins = schedule.scheduleJob(' * * * * *', function(){
 
     var tasks = [
         function(callback){
-            console.log("~~~~~~~~~~~~function1111");
             Market.find()
             .where('source').equals('bithumb').select('pair')
             .then(function(markets) {
@@ -128,7 +135,6 @@ var crawlingCoins = schedule.scheduleJob(' * * * * *', function(){
         },
 
         function(marketArray, callback){
-            console.log("~~~~~~~~~~~~function222");
             request(reqUrl, function(err, res, body){
                 if (!err && res.statusCode === 200) {
                     var $ = cheerio.load(body);
@@ -144,9 +150,6 @@ var crawlingCoins = schedule.scheduleJob(' * * * * *', function(){
         },
 
         function(marketArray, coinmarketcapArray, callback){
-            console.log("~~~~~~~~~~~~function3333");
-            console.log(marketArray);
-            console.log(coinmarketcapArray);
             coinmarketcapArray.forEach(function(elem){
                 if (marketArray.indexOf(elem) < 0) {
                     console.log(elem + " is needed add");
@@ -190,10 +193,72 @@ var crawlingCoins = schedule.scheduleJob(' * * * * *', function(){
 
 });
 
+var getTickers = schedule.scheduleJob('1 * * * * *', function(){
+    var source = 'upbit';
+
+    var tasks = [
+        function(callback){
+            Market.find()
+            .where('source').equals('upbit').select('coin market')
+            .then(function(markets) {
+                callback(null, markets);
+            })
+            .catch(function(err){
+                console.error(err);
+            });
+        },
+        function(markets, callback){
+            console.log('upbit');
+
+            markets.forEach(element => {
+                if (element.market === 'KRW') {
+                    stackTicker('upbit', element.market, element.coin);
+                }
+            });
+        }
+    ];
+
+    async.waterfall(tasks, function(err, result){
+        if(err) console.error(err);
+    });
+});
+
+function stackTicker(source, market, coin) {
+    var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/candles/days?code=CRIX.UPBIT.' + market + '-' + coin;
+
+    request(reqUrl, function(err, res, body){
+        if (!err && res.statusCode === 200) {
+            var json = JSON.parse(body);
+            if (json.length > 0) {
+                var tradePrice = json[0].tradePrice;
+                if (market === 'BTC') {
+                    tradePrice = com.toSatoshiFormat(tradePrice);
+                }
+                console.log("["+market+"_"+coin+"] "+tradePrice);
+                var tickerCollection = new Ticker();
+                tickerCollection.created = moment().format('YYYYMMDDHHmm');
+                tickerCollection.source = source;
+                tickerCollection.market = market;
+                tickerCollection.coin = coin;
+                tickerCollection.price = tradePrice;
+
+                tickerCollection.save(function(err, tickerCollection){
+                    if(err) {
+                        console.error(err);
+                    }
+                });               
+
+            } else {
+                console.log("no such coin.");
+            }
+        }
+    });
+}
 
 
 module.exports = {
     'jj' : jj,
     'exchangeJob': exchangeJob,
-    'crawlingCoins': crawlingCoins
+    'crawlingCoins': crawlingCoins,
+    'getTickers': getTickers
 };

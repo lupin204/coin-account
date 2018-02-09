@@ -293,7 +293,7 @@ router.get(['/coinnest/:coin?/:market?'], function(req, res, next) {
         if (!err && res.statusCode === 200) {
             console.log(body);
             if (body.startsWith('{')) {
-                var json = JSON.parse(body);0000000000
+                var json = JSON.parse(body);
                 console.log(json.last);
             } else {
                 console.log("no such coin.");
