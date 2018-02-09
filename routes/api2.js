@@ -68,7 +68,6 @@ router.get(['/test'], function(req, res, next) {
 
 
 router.get(['/test2'], function(req, res, next) {
-    console.log("test2222");
     var reqUrl = 'https://coinmarketcap.com/exchanges/bithumb/';
     var createdDate = moment().format('YYYYMMDD');
     var coinmarketcaps = [];
