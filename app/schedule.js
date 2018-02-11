@@ -69,137 +69,13 @@ var exchangeJob = schedule.scheduleJob('* 1  * * *', function(){
     });
 });
 
-/*
-KR bithumb upbit coinone korbit coinrail coinnest
-HK binance bitfinex kucoin okex gate-io 
-us bittrex kraken poloniex gdax
-jp bitflyer
-cn huobi
-etc liqui
-*/
-function insertMarket() {
-    var source = 'bithumb';
-    var reqUrl = 'https://coinmarketcap.com/exchanges/' + source;
-    console.log('crawling coinmarketcap');
-
-    request(reqUrl, function(err, res, body){
-        if (!err && res.statusCode === 200) {
-            var $ = cheerio.load(body);
-            var coinCnt = $('#exchange-markets > tbody > tr').length;
-            console.log("["+source+"] "+coinCnt);
-            var createdDate = moment().format('YYYYMMDD');
-
-            for (var i=1; i<=coinCnt; i++) {
-                var elem = $('#exchange-markets > tbody > tr:nth-child('+i+') > td:nth-child(3) > a').text();
-                var coin = elem.split('/')[0];
-                var market = elem.split('/')[1];
-
-                var marketCollection = new Market();
-                marketCollection.source = source;
-                marketCollection.coin = coin;
-                marketCollection.market = market;
-                marketCollection.pair = elem;
-                marketCollection.created = createdDate;
-
-                marketCollection.save(function(err, marketCollection){
-                    if(err) {
-                        console.error(err);
-                    }
-                });
-            }
-        }
-    });
-}
-
-
-var crawlingCoins = schedule.scheduleJob('* * * * * 1', function(){
-
-    var reqUrl = 'https://coinmarketcap.com/exchanges/bithumb/';
-    var createdDate = moment().format('YYYYMMDD');
-    var coinmarketcaps = [];
-
-    var tasks = [
-        function(callback){
-            Market.find()
-            .where('source').equals('bithumb').select('pair')
-            .then(function(markets) {
-                var marketArray = [];
-                markets.forEach(function(value, index){
-                    marketArray[index] = value.pair;
-                });
-                callback(null, marketArray);
-            })
-            .catch(function(err){
-                console.error(err);
-            });
-        },
-
-        function(marketArray, callback){
-            request(reqUrl, function(err, res, body){
-                if (!err && res.statusCode === 200) {
-                    var $ = cheerio.load(body);
-                    var coinCnt = $('#exchange-markets > tbody > tr').length;
-                    var coinmarketcapArray = [];
-                    for (var i=1; i<=coinCnt; i++) {
-                        var elem = $('#exchange-markets > tbody > tr:nth-child('+i+') > td:nth-child(3) > a').text();
-                        coinmarketcapArray.push(elem);
-                    }
-                    callback(null, marketArray, coinmarketcapArray);
-                }
-            });
-        },
-
-        function(marketArray, coinmarketcapArray, callback){
-            coinmarketcapArray.forEach(function(elem){
-                if (marketArray.indexOf(elem) < 0) {
-                    console.log(elem + " is needed add");
-                    var marketCollection = new Market();
-                    marketCollection.source = 'bithumb';
-                    marketCollection.coin = elem.split('/')[0];
-                    marketCollection.market = elem.split('/')[1];
-                    marketCollection.pair = elem;
-                    marketCollection.created = moment().format('YYYYMMDD');
-    
-                    marketCollection.save(function(err, marketCollection){
-                        if(err) {
-                            console.error(err);
-                        }
-                    });
-                }
-            });
-            marketArray.forEach(function(elem){
-                if (coinmarketcapArray.indexOf(elem) < 0) {
-                    console.log(elem + " is needed delete");
-                    Market.remove({pair: elem}, function(err, result){
-                        if (err) {
-                            console.error(err);
-                        }
-                    });
-                }
-                
-            });
-            callback(null, true);
-        }
-    ];
-
-
-    async.waterfall(tasks, function (err, result) {
-        if (err) {
-            console.log(err);
-        } else {
-           console.log(result);
-        }
-      });
-
-});
-
 var getTickers = schedule.scheduleJob('1 * * * * *', function(){
     var source = 'upbit';
 
     var tasks = [
         function(callback){
             Market.find()
-            .where('source').equals('upbit').select('coin market')
+            .where('source').equals(source).select('coin market')
             .then(function(markets) {
                 callback(null, markets);
             })
@@ -208,11 +84,11 @@ var getTickers = schedule.scheduleJob('1 * * * * *', function(){
             });
         },
         function(markets, callback){
-            console.log('upbit');
+            console.log(source);
 
             markets.forEach(element => {
                 if (element.market === 'KRW') {
-                    stackTicker('upbit', element.market, element.coin);
+                    stackTicker(source, element.market, element.coin);
                 }
             });
         }
