@@ -52,6 +52,8 @@ app.use(function(req, res, next) {
   schedule.jj();
   //schedule.exchangeJob();
   schedule.crawlingCoins();
+  schedule.getTickers();
+  schedule.getTickers2();
   console.log("app - schedule - end");
   next();
 });
