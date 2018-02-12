@@ -87,8 +87,8 @@ var getTickers = schedule.scheduleJob('1 * * * * *', function(){
                     tickerCollection.source = source;
                     tickerCollection.market = 'KRW';
                     tickerCollection.coin = key;
-                    tickerCollection.price = 0 + json.data[key].closing_price;
-                    tickerCollection.volume = 0 + json.data[key].units_traded;
+                    tickerCollection.price = json.data[key].closing_price;
+                    tickerCollection.volume = json.data[key].units_traded;
 
                     tickerCollection.save(function(err, tickerCollection){
                         if(err) {
