@@ -17,7 +17,7 @@ const tickerSchema = new Schema({
     source: { type: String, required: true},    // upbit
     market: { type: String, required: true},    // KRW, BTC
     coin: { type: String, required: true },    // ADA, XRP
-    price: {type: String, required: true },     // 10000
+    price: {type: String, required: false },     // 10000
     volume: {type: String, required: false },                     // 486.1245
     created: { type: String, required: true},   // yyyymmddhh24mi
     createdDate: {type: Date, required: true, default: Date.now }
