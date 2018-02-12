@@ -162,44 +162,44 @@ router.get(['/test3'], function(req, res, next) {
 
     var tasks = [
         function(callback){
-            console.log("1111111111111111111111");
-            console.log(aaa);
+            //console.log("1111111111111111111111");
+            //console.log(aaa);
             aaa += 'aaa1';
-            console.log(callback);
+            //console.log(callback);
           callback(null, '하나', '둘');
         },
         function(arg1, arg2, callback){
-            console.log("2222222222222222");
-            console.log(bbb);
+            //console.log("2222222222222222");
+            //console.log(bbb);
           // arg1는 '하나'고, arg2는 '둘'이다.
-          console.log(arg1);
-          console.log(arg2);
-          console.log(callback);
+          //console.log(arg1);
+          //console.log(arg2);
+          //console.log(callback);
           callback(null, '셋');
         },
         function(arg1, callback){
-            console.log("333333333333333");
+            //console.log("333333333333333");
           // arg1은 '셋'이다.
-          console.log(arg1);
-          console.log(callback);
+          //console.log(arg1);
+          //console.log(callback);
           callback(null, '끝');
         }
       ];
 
     async.waterfall(tasks, function (err, result) {
         // result에는 '끝'이 담겨 온다.
-        if (err)
-        console.log(err);
-        else {
-        console.log(result);
-        console.log(aaa);
+        if (err) {
+        //console.log(err);
+        } else {
+        //console.log(result);
+        //console.log(aaa);
         }
       });
 
-      console.log(aaa);
+      //console.log(aaa);
 
 
-    res.send('respond with a resource');
+    res.send('awake idle heroku');
 });
 
 

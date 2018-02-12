@@ -4,6 +4,7 @@ const moment = require('moment');
 const request = require('request');
 const cheerio = require('cheerio');
 const async = require('async');
+const http = require("http");
 
 // models
 const Exchange = require('../models/exchange');
@@ -30,12 +31,16 @@ rule.second = 50;
 └───────────────────────── second (0 - 59, OPTIONAL)
 --> scheduleJob('* * * * * *', function(){
 */
-var jj = schedule.scheduleJob(rule, function(){
-     console.log("execute jj");
+var jj = schedule.scheduleJob('* /10 * * * *', function(){
+    console.log("check idle");
+    var url = "https://obscure-gorge-24159.herokuapp.com/api2/test3";
+    http.get(url, function(res){
+        console.log("http request done");
+    });
  });
 
 // exchange rates scheduling : per a hour
-var exchangeJob = schedule.scheduleJob('* 1  * * *', function(){
+var exchangeJob = schedule.scheduleJob('* 1 * * * *', function(){
     console.log('schedule111');
     var currencies = 'KRW,JPY'
     //var reqUrl = 'https://openexchangerates.org/api/latest.json?&app_id=' + constants.apiKey.openexchangerates + '&symbols=' + currencies;
