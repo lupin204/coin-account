@@ -2,18 +2,15 @@ var express = require('express');
 var request = require('request');
 var router = express.Router();
 
-// temp
 const cheerio = require('cheerio');
-const Market = require('../models/market');
 const async = require('async');
-// temp end
-
-
-var com = require('../app/common.js');
+const moment = require('moment');
 
 const Exchange = require('../models/exchange');
 const Market = require('../models/market');
-const moment = require('moment');
+const Ticker = require('../models/ticker');
+const com = require('../app/common.js');
+
 
 /*
 KR bithumb upbit coinone korbit coinrail coinnest
@@ -24,6 +21,7 @@ cn huobi
 etc liqui
 */
 router.put(['/updateMarket/:source'], function(req, res, next) {
+    
     var source = req.params.source;
     if (!source) {
         res.status(200).send('Need to source (upbit, binance, etc...)');
@@ -31,7 +29,8 @@ router.put(['/updateMarket/:source'], function(req, res, next) {
         var tasks = [
             function(callback){
                 Market.remove({ source: source }, function(err, output){
-                    if(err) return res.status(500).json({ error: "database failure" });
+                    if(err) res.status(500).json({ error: "database failure" });
+                    console.log("[" + source + "] " + output.n + " items is removed");
                     callback(null, source);
                 });
             },
@@ -42,10 +41,11 @@ router.put(['/updateMarket/:source'], function(req, res, next) {
         ];
         async.waterfall(tasks, function(err, result){
             if (err){
-                return res.status(500).json({error: 'system error'});
+                res.status(500).json({error: 'system error'});
             }
         });
     }
+    res.send("respond with a resource");
 });
 
 function insertMarket(source) {
@@ -56,7 +56,7 @@ function insertMarket(source) {
         if (!err && res.statusCode === 200) {
             var $ = cheerio.load(body);
             var coinCnt = $('#exchange-markets > tbody > tr').length;
-            console.log("["+source+"] "+coinCnt);
+            console.log("["+source+"] "+ coinCnt + " items is selected from Coinmarketcap");
             var createdDate = moment().format('YYYYMMDD');
 
             for (var i=1; i<=coinCnt; i++) {
@@ -72,15 +72,23 @@ function insertMarket(source) {
                 marketCollection.created = createdDate;
 
                 marketCollection.save(function(err, marketCollection){
-                    if(err) {
-                        console.error(err);
-                    }
+                    if(err) console.error(err);
                 });
             }
         }
     });
 }
 
+function selectMarket(source) {
+    Market.find()
+    .where('source').equals(source).select('coin market')
+    .then(function(markets) {
+        console.log("[" + source + "] " + markets.length + " items is saved");
+    })
+    .catch(function(err){
+        console.error(err);
+    });
+}
 
 function crawlingCoins() {
 
@@ -152,7 +160,6 @@ function crawlingCoins() {
         }
     ];
 
-
     async.waterfall(tasks, function (err, result) {
         if (err) {
             console.log(err);
@@ -160,8 +167,28 @@ function crawlingCoins() {
            console.log(result);
         }
       });
-
 };
+
+router.post(['/setTickers/:source'], function(req, res, next) {
+    var source = req.params.source;
+    if (!source) {
+        res.status(200).send('Need to source (upbit, binance, etc...)');
+    } else {
+        var tasks = [
+            function(callback){
+                Market.remove({ source: source }, function(err, output){
+                    if(err) res.status(500).json({ error: "database failure" });
+                    console.log("[" + source + "] " + output.n + " items is removed");
+                    callback(null, source);
+                });
+            },
+            function(source, callback){
+                insertMarket(source);
+                callback(null, true);
+            }
+        ];
+    }
+});
 
 module.exports = router;
 

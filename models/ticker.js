@@ -14,11 +14,12 @@ Array
 const tickerSchema = new Schema({
     
     /*created: { type: String, required: true, unique: true, index: true},*/
-    created: { type: String, required: true},   // yyyymmddhh24mi
     source: { type: String, required: true},    // upbit
     market: { type: String, required: true},    // KRW, BTC
     coin: { type: String, required: true },    // ADA, XRP
     price: {type: Number, required: true },     // 10000
+    volume: {type: Number, required: false },                     // 486.1245
+    created: { type: String, required: true},   // yyyymmddhh24mi
     createdDate: {type: Date, required: true, default: Date.now }
 });
 

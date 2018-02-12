@@ -11,7 +11,7 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 var testapi = require('./routes/api');
 var testapi2 = require('./routes/api2');
-var private_api = require('./routes/private');
+const adminApi = require('./routes/adminApi');
 
 // [user-defined modules]
 var schedule = require('./app/schedule');
@@ -45,7 +45,7 @@ app.use('/', index);
 app.use('/users', users);
 app.use('/api', testapi);
 app.use('/api2', testapi2);
-app.use('/lupin204/', private_api);
+app.use('/admin/', adminApi);
 
 app.use(function(req, res, next) {
   console.log("app - schedule - start");
