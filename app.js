@@ -1,3 +1,5 @@
+require('newrelic');
+
 // [express-generator default modules]
 var express = require('express');
 var path = require('path');
