@@ -140,7 +140,7 @@ var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
 var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
     var source = 'coinrail';
 
-    var reqUrl = 'https://api.coinrail.co.kr/public/last/order?currency=';qtum-btc
+    var reqUrl = 'https://api.coinrail.co.kr/public/last/order?currency=';
 
     Market.find()
     .where('source').equals(source).select('coin market')
