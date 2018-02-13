@@ -14,7 +14,8 @@ var testapi2 = require('./routes/api2');
 const adminApi = require('./routes/adminApi');
 
 // [user-defined modules]
-var schedule = require('./app/schedule');
+const schedule = require('./app/schedule');
+const scheduleTicker = require('./app/scheduleTicker');
 const mongoose = require('./app/mongo');
 
 //----------------------------------------------------------
@@ -49,12 +50,14 @@ app.use('/admin/', adminApi);
 
 app.use(function(req, res, next) {
   console.log("app - schedule - start");
-  schedule.jj();
-  //schedule.exchangeJob();
-  schedule.crawlingCoins();
-  schedule.getTickers();
-  schedule.getTickers2();
-  schedule.getTickers3();
+  scheduleTicker.exchangeJob();
+  scheduleTicker.getTickers();
+  scheduleTicker.getTickers2();
+  scheduleTicker.getTickers3();
+  scheduleTicker.getTickers4();
+
+  //schedule.crawlingCoins();
+  schedule.checkPump();
   console.log("app - schedule - end");
   next();
 });
