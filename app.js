@@ -54,6 +54,7 @@ app.use(function(req, res, next) {
   schedule.crawlingCoins();
   schedule.getTickers();
   schedule.getTickers2();
+  schedule.getTickers3();
   console.log("app - schedule - end");
   next();
 });

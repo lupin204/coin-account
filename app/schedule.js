@@ -137,6 +137,49 @@ var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
     });
 });
 
+var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
+    var source = 'coinrail';
+
+    var reqUrl = 'https://api.coinrail.co.kr/public/last/order?currency=';qtum-btc
+
+    Market.find()
+    .where('source').equals(source).select('coin market')
+    .then(function(markets) {
+        console.log("[" + source + "] " + markets.length + " items is selected");
+
+        markets.forEach(function(market){
+            request(reqUrl, function(err, res, body){
+                if (!err && res.statusCode === 200) {
+                    var json = JSON.parse(body);
+                    if (json.error_code === 0) {
+                        var tickerCollection = new Ticker();
+                        tickerCollection.created = moment().format('YYYYMMDDHHmm00');
+                        tickerCollection.source = source;
+                        tickerCollection.market = market.market;    // KRW
+                        tickerCollection.coin = market.coin;      // TRON
+                        tickerCollection.price = json.last_price;
+                        tickerCollection.volume = 0;
+    
+                        tickerCollection.save(function(err, tickerCollection){
+                            if(err) {
+                                console.error(err);
+                            }
+                        });
+                    } 
+                }
+            });
+
+        });
+
+
+    })
+    .catch(function(err){
+        console.error(err);
+    });
+
+
+});
+
 function stackTicker(source, market, coin) {
     var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/candles/days?code=CRIX.UPBIT.' + market + '-' + coin;
 
@@ -238,5 +281,6 @@ module.exports = {
     'jj' : jj,
     'exchangeJob': exchangeJob,
     'getTickers': getTickers,
-    'getTickers2': getTickers2
+    'getTickers2': getTickers2,
+    'getTickers3': getTickers3
 };
