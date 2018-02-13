@@ -116,7 +116,7 @@ var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
             var json = JSON.parse(body);
             if (Object.keys(json).length > 0) {
                 console.log("[" + source + "] " + Object.keys(json).length + " tickers is selected");
-                for(key in json.data) {
+                for(key in json) {
                     var elem = json[key];
                     var tickerCollection = new Ticker();
                     tickerCollection.created = moment().format('YYYYMMDDHHmm00');
