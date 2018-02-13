@@ -54,7 +54,7 @@ app.use(function(req, res, next) {
   //scheduleTicker.getTickers();
   //scheduleTicker.getTickers2();
   //scheduleTicker.getTickers3();
-  scheduleTicker.getTickers4();
+  //scheduleTicker.getTickers4();
 
   //schedule.crawlingCoins();
   //schedule.checkPump();
