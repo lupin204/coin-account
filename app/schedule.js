@@ -58,7 +58,7 @@ var exchangeJob = schedule.scheduleJob('* 1 * * * *', function(){
 
                 for(key in json.rates) {
                     var exchange = new Exchange();
-                    exchange.created = moment.unix(json.timestamp).format('YYYYMMDDHHmmss');
+                    exchange.created = moment.unix(json.timestamp).utcOffset(9).format('YYYYMMDDHHmmss');
                     exchange.base = 'KRW';  // KRW
                     exchange.currency = key;    // KRW | JPY
                     exchange.rates = (key === 'USD') ? krw : krw / json.rates[key];
@@ -88,7 +88,7 @@ var getTickers = schedule.scheduleJob('1 * * * * *', function(){
                 for(key in json.data) {
                     var elem = json.data[key];
                     var tickerCollection = new Ticker();
-                    tickerCollection.created = moment().format('YYYYMMDDHHmm00');
+                    tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
                     tickerCollection.source = source;
                     tickerCollection.market = 'KRW';
                     tickerCollection.coin = key;
@@ -119,7 +119,7 @@ var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
                 for(key in json) {
                     var elem = json[key];
                     var tickerCollection = new Ticker();
-                    tickerCollection.created = moment().format('YYYYMMDDHHmm00');
+                    tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
                     tickerCollection.source = source;
                     tickerCollection.market = key.split("_")[0];    // KRW
                     tickerCollection.coin = key.split("_")[1];      // TRON
@@ -139,21 +139,21 @@ var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
 
 var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
     var source = 'coinrail';
-
-    var reqUrl = 'https://api.coinrail.co.kr/public/last/order?currency=';
-
+    
     Market.find()
     .where('source').equals(source).select('coin market')
     .then(function(markets) {
         console.log("[" + source + "] " + markets.length + " items is selected");
-
+        
         markets.forEach(function(market){
+            var reqUrl = 'https://api.coinrail.co.kr/public/last/order?currency=' + market.coin + "-" + market.market;
+
             request(reqUrl, function(err, res, body){
                 if (!err && res.statusCode === 200) {
                     var json = JSON.parse(body);
                     if (json.error_code === 0) {
                         var tickerCollection = new Ticker();
-                        tickerCollection.created = moment().format('YYYYMMDDHHmm00');
+                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
                         tickerCollection.source = source;
                         tickerCollection.market = market.market;    // KRW
                         tickerCollection.coin = market.coin;      // TRON
@@ -193,7 +193,7 @@ function stackTicker(source, market, coin) {
                 }
                 console.log("["+market+"_"+coin+"] "+tradePrice);
                 var tickerCollection = new Ticker();
-                tickerCollection.created = moment().format('YYYYMMDDHHmm');
+                tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm');
                 tickerCollection.source = source;
                 tickerCollection.market = market;
                 tickerCollection.coin = coin;
@@ -256,7 +256,7 @@ function stackTicker(source, market, coin) {
                 }
                 console.log("["+market+"_"+coin+"] "+tradePrice);
                 var tickerCollection = new Ticker();
-                tickerCollection.created = moment().format('YYYYMMDDHHmm');
+                tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm');
                 tickerCollection.source = source;
                 tickerCollection.market = market;
                 tickerCollection.coin = coin;
