@@ -278,9 +278,5 @@ function stackTicker(source, market, coin) {
 
 
 module.exports = {
-    'jj' : jj,
-    'exchangeJob': exchangeJob,
-    'getTickers': getTickers,
-    'getTickers2': getTickers2,
-    'getTickers3': getTickers3
+    'jj' : jj
 };

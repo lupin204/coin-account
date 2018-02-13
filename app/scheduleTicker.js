@@ -32,7 +32,7 @@ rule.second = 50;
 --> scheduleJob('* * * * * *', function(){
 */
 // exchange rates scheduling : per a hour
-var exchangeJob = schedule.scheduleJob('* 1 * * * *', function(){
+var exchangeJob = schedule.scheduleJob('30 1 * * * *', function(){
     var currencies = 'KRW,JPY'
     //var reqUrl = 'https://openexchangerates.org/api/latest.json?&app_id=' + constants.apiKey.openexchangerates + '&symbols=' + currencies;
     var reqUrl = 'https://openexchangerates.org/api/latest.json?&app_id=' + 'f59fad45f8c84e0394b990f6815c41b8' + '&symbols=' + currencies;
@@ -201,103 +201,6 @@ var getTickers4 = schedule.scheduleJob('4 /10 * * * *', function(){
         }
     });
 });
-
-function stackTicker(source, market, coin) {
-    var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/candles/days?code=CRIX.UPBIT.' + market + '-' + coin;
-
-    request(reqUrl, function(err, res, body){
-        if (!err && res.statusCode === 200) {
-            var json = JSON.parse(body);
-            if (json.length > 0) {
-                var tradePrice = json[0].tradePrice;
-                if (market === 'BTC') {
-                    tradePrice = com.toSatoshiFormat(tradePrice);
-                }
-                console.log("["+market+"_"+coin+"] "+tradePrice);
-                var tickerCollection = new Ticker();
-                tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm');
-                tickerCollection.source = source;
-                tickerCollection.market = market;
-                tickerCollection.coin = coin;
-                tickerCollection.price = tradePrice;
-
-                tickerCollection.save(function(err, tickerCollection){
-                    if(err) {
-                        console.error(err);
-                    }
-                });               
-
-            } else {
-                console.log("no such coin.");
-            }
-        }
-    });
-}
-
-/*
-var getTickers = schedule.scheduleJob('* * * * * *', function(){
-    var source = 'bithumb';
-
-    var tasks = [
-        function(callback){
-            Market.find()
-            .where('source').equals(source).select('coin market')
-            .then(function(markets) {
-                callback(null, markets);
-            })
-            .catch(function(err){
-                console.error(err);
-            });
-        },
-        function(markets, callback){
-            console.log(source);
-
-            markets.forEach(element => {
-                if (element.market === 'KRW') {
-                    stackTicker(source, element.market, element.coin);
-                }
-            });
-        }
-    ];
-
-    async.waterfall(tasks, function(err, result){
-        if(err) console.error(err);
-    });
-});
-
-function stackTicker(source, market, coin) {
-    var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/candles/days?code=CRIX.UPBIT.' + market + '-' + coin;
-
-    request(reqUrl, function(err, res, body){
-        if (!err && res.statusCode === 200) {
-            var json = JSON.parse(body);
-            if (json.length > 0) {
-                var tradePrice = json[0].tradePrice;
-                if (market === 'BTC') {
-                    tradePrice = com.toSatoshiFormat(tradePrice);
-                }
-                console.log("["+market+"_"+coin+"] "+tradePrice);
-                var tickerCollection = new Ticker();
-                tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm');
-                tickerCollection.source = source;
-                tickerCollection.market = market;
-                tickerCollection.coin = coin;
-                tickerCollection.price = tradePrice;
-
-                tickerCollection.save(function(err, tickerCollection){
-                    if(err) {
-                        console.error(err);
-                    }
-                });               
-
-            } else {
-                console.log("no such coin.");
-            }
-        }
-    });
-}
-*/
-
 
 module.exports = {
     'exchangeJob': exchangeJob,
