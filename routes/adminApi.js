@@ -57,7 +57,7 @@ function insertMarket(source) {
             var $ = cheerio.load(body);
             var coinCnt = $('#exchange-markets > tbody > tr').length;
             console.log("["+source+"] "+ coinCnt + " items is selected from Coinmarketcap");
-            var createdDate = moment().format('YYYYMMDD');
+            var createdDate = moment().utcOffset(9).format('YYYYMMDD');
 
             for (var i=1; i<=coinCnt; i++) {
                 var elem = $('#exchange-markets > tbody > tr:nth-child('+i+') > td:nth-child(3) > a').text();
