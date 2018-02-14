@@ -17,6 +17,7 @@ const adminApi = require('./routes/adminApi');
 //const schedule = require('./app/schedule');
 const scheduleTicker = require('./app/scheduleTicker');
 const mongoose = require('./app/mongo');
+const telegrambot = require('./app/telegrambot');
 
 //----------------------------------------------------------
 
@@ -50,7 +51,7 @@ app.use('/admin/', adminApi);
 
 app.use(function(req, res, next) {
   console.log("app - schedule - start");
-  scheduleTicker.exchangeJob();
+  //scheduleTicker.exchangeJob();
   //scheduleTicker.getTickers();
   //scheduleTicker.getTickers2();
   //scheduleTicker.getTickers3();
