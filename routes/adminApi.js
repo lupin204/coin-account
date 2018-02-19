@@ -58,6 +58,7 @@ function insertMarket(source) {
             var coinCnt = $('#exchange-markets > tbody > tr').length;
             console.log("["+source+"] "+ coinCnt + " items is selected from Coinmarketcap");
             var createdDate = moment().utcOffset(9).format('YYYYMMDD');
+            var sourceTxt = source.replace('-','');
 
             for (var i=1; i<=coinCnt; i++) {
                 var elem = $('#exchange-markets > tbody > tr:nth-child('+i+') > td:nth-child(3) > a').text();
@@ -65,7 +66,7 @@ function insertMarket(source) {
                 var market = elem.split('/')[1];
 
                 var marketCollection = new Market();
-                marketCollection.source = source;
+                marketCollection.source = sourceTxt;
                 marketCollection.coin = coin;
                 marketCollection.market = market;
                 marketCollection.pair = elem;
