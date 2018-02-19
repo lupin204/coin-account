@@ -31,7 +31,7 @@ rule.second = 50;
 └───────────────────────── second (0 - 59, OPTIONAL)
 --> scheduleJob('* * * * * *', function(){
 */
-// exchange rates scheduling : per a hour
+// exchange rates scheduling : 매 시 1분 30초
 var exchangeJob = schedule.scheduleJob('30 1 * * * *', function(){
     var currencies = 'KRW,JPY'
     //var reqUrl = 'https://openexchangerates.org/api/latest.json?&app_id=' + constants.apiKey.openexchangerates + '&symbols=' + currencies;
@@ -63,6 +63,13 @@ var exchangeJob = schedule.scheduleJob('30 1 * * * *', function(){
             }
         }
     });
+});
+
+// 최근 2일간의 Ticker정보만 저장 scheduling : 매일 0시 0분 30초
+var removeOldTickerJob = schedule.scheduleJob('30 0 0 * * *', function(){
+    var twoDaysAgo = moment().add(-2, 'days').utcOffset(9).format('YYYYMMDDHHmm00');
+    Ticker.remove( {'created': twoDaysAgo} );
+    console.log("[removeOldTicker] " + twoDaysAgo);
 });
 
 
@@ -207,5 +214,6 @@ module.exports = {
     'getTickers': getTickers,
     'getTickers2': getTickers2,
     'getTickers3': getTickers3,
-    'getTickers4': getTickers4
+    'getTickers4': getTickers4,
+    'removeOldTickerJob': removeOldTickerJob
 };
