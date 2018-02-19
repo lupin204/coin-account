@@ -15,7 +15,6 @@ const Ticker = require('../models/ticker');
 const constants = require('../app/constants');
 var com = require('../app/common.js');
 
-
 var rule = new schedule.RecurrenceRule();
 rule.second = 50;
 
@@ -207,6 +206,33 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
             } 
         }
     });
+});
+
+// 10분에 1번씩 = '*/10 * * * *'
+var getPump = schedule.scheduleJob('30 * * * * *', function(){
+    var source = 'upbit';
+    
+    var tasks = [
+        function(callback){
+            Ticker.find()
+            .where('source').equals(source).select('coin market price')
+            .then(function(tickers){
+                callback(null, tickers);
+            })
+            .catch(function(err){
+                console.error(err);
+            });
+        },
+        function(tickers, callback){
+            callback(null, true);
+        }
+    ];
+    async.waterfall(tasks, function(err, result){
+        if (err){
+            res.status(500).json({error: 'system error'});
+        }
+    });
+
 });
 
 module.exports = {
