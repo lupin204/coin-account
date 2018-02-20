@@ -9,6 +9,11 @@ var debug = require('debug')('express:server');
 var http = require('http');
 
 /**
+ * User-defined Global Object
+ */
+
+
+/**
  * Get port from environment and store in Express.
  */
 

@@ -15,6 +15,7 @@ const marketSchema = new Schema({
     
     /*created: { type: String, required: true, unique: true, index: true},*/
     source: { type: String, required: true},    // Upbit
+    fullname: {type: String, required: true},   // Bitcoin
     coin: {type: String, required: true},   // BTC
     market: {type: String, required: true}, // KRW
     pair: { type: String, required: true},  // BTC/KRW
