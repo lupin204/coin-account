@@ -81,6 +81,7 @@ var getTickers = schedule.scheduleJob('1 * * * * *', function(){
         if (!err && res.statusCode === 200) {
             var json = JSON.parse(body);
             if (json.status === '0000' && Object.keys(json.data).length > 0) {
+                delete json.data['date'];
                 console.log("[" + source + "] " + Object.keys(json.data).length + " tickers is selected");
                 for(key in json.data) {
                     var elem = json.data[key];
