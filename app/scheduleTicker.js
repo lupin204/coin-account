@@ -14,9 +14,12 @@ const Ticker = require('../models/ticker');
 // user-defined
 const constants = require('../app/constants');
 var com = require('../app/common.js');
+var bot = require('../app/telegrambot');
 
 var rule = new schedule.RecurrenceRule();
 rule.second = 50;
+
+
 
 /*
 *    *    *    *    *    *
@@ -187,7 +190,7 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
                 console.log("[" + source + "] " + Object.keys(json).length + " tickers is selected");
                 for(key in json) {
                     var elem = json[key];
-                    if (elem.code.split(".")[2].split("-")[0] !== 'ETH') {
+                    if (elem.code.split(".")[2].split("-")[0] !== 'KRW' || elem.code.split(".")[2].split("-")[0] === 'BTC') {
                         var tickerCollection = new Ticker();
                         tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
                         tickerCollection.source = source;
