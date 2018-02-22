@@ -190,7 +190,7 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
                 console.log("[" + source + "] " + Object.keys(json).length + " tickers is selected");
                 for(key in json) {
                     var elem = json[key];
-                    if (elem.code.split(".")[2].split("-")[0] !== 'KRW' || elem.code.split(".")[2].split("-")[0] === 'BTC') {
+                    if (elem.code.split(".")[2].split("-")[0] === 'KRW' || elem.code.split(".")[2].split("-")[0] === 'BTC') {
                         var tickerCollection = new Ticker();
                         tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
                         tickerCollection.source = source;
