@@ -105,6 +105,9 @@ var getTickers = schedule.scheduleJob('1 * * * * *', function(){
             } 
         }
     });
+    setTimeout(() => {
+        console.log('[bithumb] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmm00'));
+    }, 100);
 });
 
 var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
@@ -136,9 +139,12 @@ var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
             } 
         }
     });
+    setTimeout(() => {
+        console.log('[coinnest] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmm00'));
+    }, 100);
 });
 
-var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
+var getTickers3 = schedule.scheduleJob('* * * 1 * *', function(){
     var source = 'coinrail';
     
     Market.find()
@@ -175,6 +181,7 @@ var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
     .catch(function(err){
         console.error(err);
     });
+    
 });
 
 // 10분에 1번씩 = '*/10 * * * *'
@@ -210,10 +217,13 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
             } 
         }
     });
+    setTimeout(() => {
+        console.log('[upbit] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmm00'));
+    }, 100);
 });
 
 // 10분에 1번씩 = '*/10 * * * *'
-var getPump = schedule.scheduleJob('30 * * * * *', function(){
+var getPump = schedule.scheduleJob('* 1 * * * *', function(){
     var source = 'upbit';
     
     var tasks = [
