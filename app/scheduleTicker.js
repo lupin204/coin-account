@@ -181,7 +181,9 @@ var getTickers3 = schedule.scheduleJob('* * * 1 * *', function(){
     .catch(function(err){
         console.error(err);
     });
-    
+    setTimeout(() => {
+        console.log('[coinrail] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmm00'));
+    }, 100);
 });
 
 // 10분에 1번씩 = '*/10 * * * *'
@@ -223,7 +225,7 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
 });
 
 // 10분에 1번씩 = '*/10 * * * *'
-var getPump = schedule.scheduleJob('* 1 * * * *', function(){
+var getPump = schedule.scheduleJob('* * * 1 * *', function(){
     var source = 'upbit';
     
     var tasks = [
