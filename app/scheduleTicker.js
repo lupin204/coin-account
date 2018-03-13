@@ -144,7 +144,7 @@ var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
     }, 100);
 });
 
-var getTickers3 = schedule.scheduleJob('* * * 1 * *', function(){
+var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
     var source = 'coinrail';
     
     Market.find()
