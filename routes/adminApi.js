@@ -71,7 +71,7 @@ function insertMarket(source) {
                 marketCollection.fullname = fullnameElem;
                 marketCollection.coin = coin;
                 marketCollection.market = market;
-                marketCollection.pair = elem;
+                marketCollection.pair = pairElem;
                 marketCollection.created = createdDate;
 
                 marketCollection.save(function(err, marketCollection){
