@@ -62,7 +62,7 @@ function insertMarket(source) {
 
             for (var i=1; i<=coinCnt; i++) {
                 var pairElem = $('#exchange-markets > tbody > tr:nth-child('+i+') > td:nth-child(3) > a').text();
-                var coin = pariElem.split('/')[0];
+                var coin = pairElem.split('/')[0];
                 var market = pairElem.split('/')[1];
                 var fullnameElem = $('#exchange-markets > tbody > tr:nth-child('+i+') > td:nth-child(2) > a').text();
 
