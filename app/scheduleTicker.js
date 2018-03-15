@@ -203,10 +203,16 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
                         var tickerCollection = new Ticker();
                         tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
                         tickerCollection.source = source;
-                        tickerCollection.market = elem.code.split(".")[2].split("-")[0];    // KRW
-                        tickerCollection.coin = elem.code.split(".")[2].split("-")[1];      // TRON
+                        var elem_market = elem.code.split(".")[2].split("-")[0];    // CRIX.UPBIT.KRW-ADA
+                        var elem_coin = elem.code.split(".")[2].split("-")[1];
+                        tickerCollection.pair = elem_coin + "-" + elem_market;
+                        tickerCollection.market = elem_market;    // KRW
+                        tickerCollection.coin = elem_coin;      // ADA
                         tickerCollection.price = elem.tradePrice;
-                        tickerCollection.volume = elem.accTradeVolume;
+                        tickerCollection.volume = elem.tradeVolume;
+                        tickerCollection.bidAsk = elem.askBid;
+                        tickerCollection.bidAskTime = elem.tradeDate + elem.tradeTimeKst;
+                        tickerCollection.volumeRank = elem.rank;
                         //tickerCollection.risefall = elem.change;    // RISE || FALL (빨간불 파란불)
 
                         tickerCollection.save(function(err, tickerCollection){
@@ -224,14 +230,17 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
     }, 100);
 });
 
-// 10분에 1번씩 = '*/10 * * * *'
+// 1분에 1번씩 = '*/10 * * * *'
 var getPump = schedule.scheduleJob('* * * 1 * *', function(){
     var source = 'upbit';
     
     var tasks = [
         function(callback){
+            var fiveMinutesAgo = moment().add(-t,'minute').utcOffset(9).format('YYYYMMDDHHmm00');
             Ticker.find()
-            .where('source').equals(source).select('coin market price')
+            .where('source').equals(source)
+            .where('created').gt(fiveMinutesAgo)
+            .sort({'coin':1, 'market':1, 'created':1}).select('coin market price volume bidAskTime')
             .then(function(tickers){
                 callback(null, tickers);
             })
@@ -240,6 +249,11 @@ var getPump = schedule.scheduleJob('* * * 1 * *', function(){
             });
         },
         function(tickers, callback){
+            
+            var i=0, loopLength = tickers.length;
+            for (i; i<loopLength; i++) {
+                
+            }
             callback(null, true);
         }
     ];
