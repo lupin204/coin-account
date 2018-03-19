@@ -14,7 +14,7 @@ const Ticker = require('../models/ticker');
 // user-defined
 const constants = require('../app/constants');
 var com = require('../app/common.js');
-var bot = require('../app/telegrambot');
+//var bot = require('../app/telegrambot');
 
 var rule = new schedule.RecurrenceRule();
 rule.second = 50;
