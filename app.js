@@ -17,7 +17,7 @@ const adminApi = require('./routes/adminApi');
 //const schedule = require('./app/schedule');
 const scheduleTicker = require('./app/scheduleTicker');
 const mongoose = require('./app/mongo');
-const telegrambot = require('./app/telegrambot');
+//const telegrambot = require('./app/telegrambot');
 
 //----------------------------------------------------------
 

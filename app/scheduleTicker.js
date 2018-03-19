@@ -34,6 +34,7 @@ rule.second = 50;
 --> scheduleJob('* * * * * *', function(){
 */
 // exchange rates scheduling : 매 시 1분 30초
+//var exchangeJob = schedule.scheduleJob('* * * 1 * *', function(){
 var exchangeJob = schedule.scheduleJob('30 1 * * * *', function(){
     var currencies = 'KRW,JPY'
     //var reqUrl = 'https://openexchangerates.org/api/latest.json?&app_id=' + constants.apiKey.openexchangerates + '&symbols=' + currencies;
@@ -75,7 +76,8 @@ var removeOldTickerJob = schedule.scheduleJob('30 0 0 * * *', function(){
 });
 
 
-var getTickers = schedule.scheduleJob('1 * * * * *', function(){
+var getTickers = schedule.scheduleJob('* * * 1 * *', function(){
+//var getTickers = schedule.scheduleJob('1 * * * * *', function(){
     var source = 'bithumb';
 
     var reqUrl = 'https://api.bithumb.com/public/ticker/all';
@@ -110,7 +112,8 @@ var getTickers = schedule.scheduleJob('1 * * * * *', function(){
     }, 100);
 });
 
-var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
+var getTickers2 = schedule.scheduleJob('* * * 1 * *', function(){
+//var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
     var source = 'coinnest';
 
     var reqUrl = 'https://api.coinnest.co.kr/api/pub/tickerall';
@@ -144,7 +147,8 @@ var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
     }, 100);
 });
 
-var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
+var getTickers3 = schedule.scheduleJob('* * * 1 * *', function(){
+//var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
     var source = 'coinrail';
     
     Market.find()
@@ -187,6 +191,7 @@ var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
 });
 
 // 10분에 1번씩 = '*/10 * * * *'
+//var getTickers4 = schedule.scheduleJob('* * * 1 * *', function(){
 var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
     var source = 'upbit';
 
@@ -214,6 +219,7 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
                         tickerCollection.bidAskTime = elem.tradeDate + elem.tradeTimeKst;
                         tickerCollection.volumeRank = elem.rank;
                         //tickerCollection.risefall = elem.change;    // RISE || FALL (빨간불 파란불)
+                        //tickerCollection.upbitObj = elem;
 
                         tickerCollection.save(function(err, tickerCollection){
                             if(err) {
