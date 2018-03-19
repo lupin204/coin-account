@@ -13,8 +13,8 @@ const Ticker = require('../models/ticker');
 
 // user-defined
 const constants = require('../app/constants');
-var com = require('../app/common.js');
-//var bot = require('../app/telegrambot');
+const com = require('../app/common.js');
+const bot = require('../app/telegrambot');
 
 var rule = new schedule.RecurrenceRule();
 rule.second = 50;
@@ -191,8 +191,8 @@ var getTickers3 = schedule.scheduleJob('* * * 1 * *', function(){
 });
 
 // 10분에 1번씩 = '*/10 * * * *'
-//var getTickers4 = schedule.scheduleJob('* * * 1 * *', function(){
-var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
+var getTickers4 = schedule.scheduleJob('* * * 1 * *', function(){
+//var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
     var source = 'upbit';
 
     var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
@@ -239,16 +239,20 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
 });
 
 // 1분에 1번씩 = '*/10 * * * *'
-var getPump = schedule.scheduleJob('* * * 1 * *', function(){
+// 최근 3분봉
+var getPump = schedule.scheduleJob('15 * * * * *', function(){
     var source = 'upbit';
+    var pumpGap = 3;    // 3분변화량
     
     var tasks = [
         function(callback){
-            var fiveMinutesAgo = moment().add(-t,'minute').utcOffset(9).format('YYYYMMDDHHmm00');
+            var fiveMinutesAgo = moment().add(-1-pumpGap,'minute').utcOffset(9).format('YYYYMMDDHHmm00');
             Ticker.find()
             .where('source').equals(source)
             .where('created').gt(fiveMinutesAgo)
-            .sort({'coin':1, 'market':1, 'created':1}).select('coin market price volume bidAskTime')
+            //.where('pair').equals('SNT-BTC')
+            .where('market').in(['KRW','BTC'])
+            .sort({'coin':1, 'market':1, 'created':1}).select('created pair market coin price volume bidVolume askVolume bidAskTime volumeRank')
             .then(function(tickers){
                 callback(null, tickers);
             })
@@ -257,20 +261,58 @@ var getPump = schedule.scheduleJob('* * * 1 * *', function(){
             });
         },
         function(tickers, callback){
-            
-            var i=0, loopLength = tickers.length;
-            for (i; i<loopLength; i++) {
-                
+            tickers = com.groupByArray(tickers, 'pair');
+            var i=0, tickerLength = Object.keys(tickers).length;
+            var chkPump = {
+                price: 0,
+                bidVolume: 0,
+                askVolume: 0,
+                bidAskTime: 0,
+                volumeRank: 0
+            };
+            var isPumping = 0;
+            var sendTelegram = false;
+            var rtnMsg = "[Pump - " + pumpGap + " minutes] " + moment().utcOffset(9).format('MM-DD HH:mm');
+
+            for (key in tickers) {
+                //console.log(tickers[key]);
+
+                // 일단 3분봉 가져옴
+                for (var j=0; j<pumpGap; j++) {
+                    // 가격 펌핑 - 0.1%
+                    if ((Number(tickers[key][j+1].price) / Number(tickers[key][j].price)) > 1) {
+                        // 거래량 체크 - ticker(1분)마다 계속 거래가 있었는지
+                        if (moment(tickers[key][j].created, 'YYYYMMDDHHmm00').minutes() === moment(tickers[key][j].bidAskTime, 'YYYYMMDDHHmm00').add(1, 'minutes').minutes()) {
+                            // 매수세 > 매도세 인지
+                            if (Number(tickers[key][j+1].bidVolume) - Number(tickers[key][j].bidVolume) > Number(tickers[key][j+1].askVolume) - Number(tickers[key][j].askVolume)) {
+                                //console.log(key + " : " + Number(tickers[key][j].price) + " ==> " + Number(tickers[key][j+1].price) + " ~~ " + 
+                                //(Number(tickers[key][j+1].bidVolume) - Number(tickers[key][j].bidVolume)) + " : " + (Number(tickers[key][j+1].askVolume) - Number(tickers[key][j].askVolume)));
+                                isPumping++;
+                            }
+                        }
+                    } else {
+                        isPumping = 0;
+                    }
+                }
+
+                // 연속 상승
+                if (isPumping > pumpGap) {
+                    rtnMsg += "\n[" + key + "] : " + com.toSatoshiFormat(tickers[key][0].price, tickers[key][0].market) + " ==> " + com.toSatoshiFormat(tickers[key][pumpGap].price, tickers[key][pumpGap].market);
+                    //console.log("[" + key + "] : " + "" + Number(tickers[key][0].price) + " ==> " + Number(tickers[key][pumpGap].price));
+                    sendTelegram = true;
+                }
+                isPumping = 0;
             }
-            callback(null, true);
+            callback(null, tickers, rtnMsg, sendTelegram);
         }
     ];
-    async.waterfall(tasks, function(err, result){
+    async.waterfall(tasks, function(err, result, rtnMsg, sendTelegram){
         if (err){
             res.status(500).json({error: 'system error'});
         }
+        console.log(rtnMsg);
+        if (sendTelegram) bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
     });
-
 });
 
 module.exports = {

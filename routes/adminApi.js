@@ -10,6 +10,7 @@ const Exchange = require('../models/exchange');
 const Market = require('../models/market');
 const Ticker = require('../models/ticker');
 const com = require('../app/common.js');
+const bot = require('../app/telegrambot');
 
 
 /*
@@ -191,6 +192,86 @@ router.post(['/setTickers/:source'], function(req, res, next) {
             }
         ];
     }
+});
+
+router.get(['/pump'], function(req, res, next) {
+    var source = 'upbit';
+    
+    var tasks = [
+        function(callback){
+            var fiveMinutesAgo = moment().add(-4,'minute').utcOffset(9).format('YYYYMMDDHHmm00');
+            Ticker.find()
+            .where('source').equals(source)
+            .where('created').gt(fiveMinutesAgo)
+            //.where('pair').equals('SNT-BTC')
+            .where('market').equals('KRW')
+            .sort({'coin':1, 'market':1, 'created':1}).select('created pair market coin price volume bidVolume askVolume bidAskTime volumeRank')
+            .then(function(tickers){
+                callback(null, tickers);
+            })
+            .catch(function(err){
+                console.error(err);
+            });
+        },
+        function(tickers, callback){
+            tickers = com.groupByArray(tickers, 'pair');
+            var i=0, tickerLength = Object.keys(tickers).length;
+            var chkPump = {
+                price: 0,
+                bidVolume: 0,
+                askVolume: 0,
+                bidAskTime: 0,
+                volumeRank: 0
+            };
+            var isPumping = 0;
+            var sendTelegram = false;
+            var rtnMsg = "[Pump - 3 minutes] " + moment().utcOffset(9).format('MM-DD HH:mm') + "<br>";
+
+            for (key in tickers) {
+                //console.log(tickers[key]);
+                
+
+                // 일단 3분봉 가져옴
+                for (var j=0; j<3; j++) {
+                    // 가격 펌핑 - 0.1%
+                    if ((Number(tickers[key][j+1].price) / Number(tickers[key][j].price)) > 1.001) {
+                        // 거래량 체크 - ticker(1분)마다 계속 거래가 있었는지
+                        if (moment(tickers[key][j].created, 'YYYYMMDDHHmm00').minutes() === moment(tickers[key][j].bidAskTime, 'YYYYMMDDHHmm00').add(1, 'minutes').minutes()) {
+                            // 매수세 > 매도세 인지
+                            if (Number(tickers[key][j+1].bidVolume) - Number(tickers[key][j].bidVolume) > Number(tickers[key][j+1].askVolume) - Number(tickers[key][j].askVolume)) {
+                                console.log(key + " : " + Number(tickers[key][j].price) + " ==> " + Number(tickers[key][j+1].price) + " ~~ " + 
+                                (Number(tickers[key][j+1].bidVolume) - Number(tickers[key][j].bidVolume)) + " : " + (Number(tickers[key][j+1].askVolume) - Number(tickers[key][j].askVolume)));
+                                isPumping++;
+                            }
+                        }
+                    } else {
+                        isPumping = 0;
+                    }
+                    // var bidVolumeGap = Number(tickers[key][j+1].bidVolume) - Number(tickers[key][j].bidVolume);
+                    // var askVolumeGap = Number(tickers[key][j+1].askVolume) - Number(tickers[key][j].askVolume);
+                }
+
+                // 3틱 연속 상승
+                if (isPumping === 3) {
+                    rtnMsg += "[" + key + "] : " + tickers[key][0].price + " ==> " + tickers[key][3].price + "<br>";
+                    console.log("[" + key + "] : " + "" + Number(tickers[key][0].price) + " ==> " + Number(tickers[key][3].price));
+                    sendTelegram = true;
+                }
+                isPumping = 0;
+            }
+            callback(null, tickers, rtnMsg, sendTelegram);
+        }
+    ];
+    async.waterfall(tasks, function(err, result, rtnMsg, sendTelegram){
+        if (err){
+            res.status(500).json({error: 'system error'});
+        }
+        //console.log(JSON.stringify(result));
+        console.log(rtnMsg);
+        if (sendTelegram) bot.telegrambot.sendMessage(bot.channedId, rtnMsg, {parse_mode : "markdown"});
+        res.status(200).json(result);
+    });
+    //res.send("respond with a resource");
 });
 
 module.exports = router;

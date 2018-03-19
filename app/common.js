@@ -1,8 +1,9 @@
 var com;
 com = {
-    toSatoshiFormat : function(value){
-        if (typeof(value) == 'undefined') { value = 0; }
-        return Number(value) * 100000000;
+    toSatoshiFormat : function(value, market){
+        if (typeof(value) == 'undefined') value = 0;
+        if (typeof(market) == 'undefined') market = 'BTC';
+        return (market.toUpperCase() === 'BTC') ? parseInt(Number(value)*100000000) : Number(value);
     },
     // function([], group by attribute string)
     groupByArray : function(xs, key) {
