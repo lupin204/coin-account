@@ -240,9 +240,9 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
 
 // 1분에 1번씩 = '*/10 * * * *'
 // 최근 3분봉
-var getPump = schedule.scheduleJob('15 * * * * *', function(){
+var getPump = schedule.scheduleJob('10 * * * * *', function(){
     var source = 'upbit';
-    var pumpGap = 3;    // 3분변화량
+    var pumpGap = 3;    // 3분변화량 (4틱)
     
     var tasks = [
         function(callback){
@@ -272,12 +272,11 @@ var getPump = schedule.scheduleJob('15 * * * * *', function(){
             };
             var isPumping = 0;
             var sendTelegram = false;
-            var rtnMsg = "[Pump - " + pumpGap + " minutes] " + moment().utcOffset(9).format('MM-DD HH:mm');
+            var rtnMsg = "[PUMP - " + pumpGap + "min ] " + moment().utcOffset(9).format('YYYY-MM-DD HH:mm');
 
             for (key in tickers) {
                 //console.log(tickers[key]);
 
-                // 일단 3분봉 가져옴
                 for (var j=0; j<pumpGap; j++) {
                     // 가격 펌핑 - 0.1%
                     if ((Number(tickers[key][j+1].price) / Number(tickers[key][j].price)) > 1) {
@@ -285,9 +284,12 @@ var getPump = schedule.scheduleJob('15 * * * * *', function(){
                         if (moment(tickers[key][j].created, 'YYYYMMDDHHmm00').minutes() === moment(tickers[key][j].bidAskTime, 'YYYYMMDDHHmm00').add(1, 'minutes').minutes()) {
                             // 매수세 > 매도세 인지
                             if (Number(tickers[key][j+1].bidVolume) - Number(tickers[key][j].bidVolume) > Number(tickers[key][j+1].askVolume) - Number(tickers[key][j].askVolume)) {
-                                //console.log(key + " : " + Number(tickers[key][j].price) + " ==> " + Number(tickers[key][j+1].price) + " ~~ " + 
-                                //(Number(tickers[key][j+1].bidVolume) - Number(tickers[key][j].bidVolume)) + " : " + (Number(tickers[key][j+1].askVolume) - Number(tickers[key][j].askVolume)));
-                                isPumping++;
+                                // 거래량 상위 150등 이내인지 (총244코인)
+                                if (Number(tickers[key][j+1].volumeRank) < 150) {
+                                    //var debugTxt = key + " : " + Number(tickers[key][j].price) + " ==> " + Number(tickers[key][j+1].price) + " ~~ "+ (Number(tickers[key][j+1].bidVolume) - Number(tickers[key][j].bidVolume)) + " : " + (Number(tickers[key][j+1].askVolume) - Number(tickers[key][j].askVolume));
+                                    //console.log(debugTxt);
+                                    isPumping++;
+                                }
                             }
                         }
                     } else {
@@ -296,9 +298,13 @@ var getPump = schedule.scheduleJob('15 * * * * *', function(){
                 }
 
                 // 연속 상승
-                if (isPumping > pumpGap) {
-                    rtnMsg += "\n[" + key + "] : " + com.toSatoshiFormat(tickers[key][0].price, tickers[key][0].market) + " ==> " + com.toSatoshiFormat(tickers[key][pumpGap].price, tickers[key][pumpGap].market);
-                    //console.log("[" + key + "] : " + "" + Number(tickers[key][0].price) + " ==> " + Number(tickers[key][pumpGap].price));
+                if (isPumping >= pumpGap) {
+                    var tickerFirst = tickers[key][0];
+                    var tickerLast = tickers[key][pumpGap];
+                    rtnMsg += "\n[" + key + "] : " + ((Number(tickerLast.price) / Number(tickerFirst.price) - 1) * 100).toFixed(2) + "% ( " + tickerLast.volumeRank + " )"
+                            + "\n(" + com.toSatoshiFormat(tickerFirst.price, tickerFirst.market) + " ==> " + com.toSatoshiFormat(tickerLast.price,tickerLast.market) + ")";
+                    //var debugTxt = "[" + key + "] : " + "" + Number(tickers[key][0].price) + " ==> " + Number(tickers[key][pumpGap].price + "( " + tickers[key][pumpGap].rank + " )");
+                    //console.log(debugTxt);
                     sendTelegram = true;
                 }
                 isPumping = 0;
