@@ -192,7 +192,7 @@ var getTickers3 = schedule.scheduleJob('* * * 1 * *', function(){
 
 // 10분에 1번씩 = '*/10 * * * *'
 //var getTickers4 = schedule.scheduleJob('* * * 1 * *', function(){
-var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
+var getTickers4 = schedule.scheduleJob('*/10 * * * * *', function(){
     var source = 'upbit';
 
     var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
@@ -204,9 +204,9 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
                 console.log("[" + source + "] " + Object.keys(json).length + " tickers is selected");
                 for(key in json) {
                     var elem = json[key];
-                    // if (elem.code.split(".")[2].split("-")[0] === 'KRW' || elem.code.split(".")[2].split("-")[0] === 'BTC') {
+                    if (elem.code.split(".")[2].split("-")[0] === 'KRW' || elem.code.split(".")[2].split("-")[0] === 'BTC') {
                         var tickerCollection = new Ticker();
-                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
+                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmmss');
                         tickerCollection.source = source;
                         var elem_market = elem.code.split(".")[2].split("-")[0];    // CRIX.UPBIT.KRW-ADA
                         var elem_coin = elem.code.split(".")[2].split("-")[1];
@@ -228,19 +228,20 @@ var getTickers4 = schedule.scheduleJob('4 * * * * *', function(){
                                 console.error(err);
                             }
                         });
-                    // }
+                    }
                 }
             } 
         }
     });
     setTimeout(() => {
-        console.log('[upbit] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmm00'));
+        console.log('[upbit] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmmss'));
     }, 100);
 });
 
 // 1분에 1번씩 = '*/10 * * * *'
 // 최근 3분봉
-var getPump = schedule.scheduleJob('10 * * * * *', function(){
+var getPump = schedule.scheduleJob('* * * 1 * *', function(){
+//var getPump = schedule.scheduleJob('10 * * * * *', function(){
     var source = 'upbit';
     var pumpGap = 3;    // 3분변화량 (4틱)
     

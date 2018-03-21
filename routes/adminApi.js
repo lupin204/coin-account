@@ -274,5 +274,27 @@ router.get(['/pump'], function(req, res, next) {
     //res.send("respond with a resource");
 });
 
+router.get(['/check/:pair'], function(req, res, next) {
+    var source = 'upbit';
+    var pair = req.params.pair;
+    if (!pair) {
+        var rtnMsg = "/check/BTC-KRW";
+        return res.status(200).json(rtnMsg);
+    }
+    Ticker.find()
+    .where('source').equals(source)
+    .where('pair').equals(pair)
+    .sort({'created':1}).select('-_id created price bidVolume askVolume volumeRank')
+    .then(function(tickers){
+        var newTickers = com.tempFunc(tickers);
+        res.status(200).json(newTickers);
+    })
+    .catch(function(err){
+        console.error(err);
+    });
+
+
+});
+
 module.exports = router;
 
