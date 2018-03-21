@@ -196,6 +196,7 @@ var getTickers4 = schedule.scheduleJob('*/10 * * * * *', function(){
     var source = 'upbit';
 
     var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
+    var datePattern = /.$/;
 
     request(reqUrl, function(err, res, body){
         if (!err && res.statusCode === 200) {
@@ -204,9 +205,10 @@ var getTickers4 = schedule.scheduleJob('*/10 * * * * *', function(){
                 console.log("[" + source + "] " + Object.keys(json).length + " tickers is selected");
                 for(key in json) {
                     var elem = json[key];
+                    // BTC KRW 갯수 = 157
                     if (elem.code.split(".")[2].split("-")[0] === 'KRW' || elem.code.split(".")[2].split("-")[0] === 'BTC') {
                         var tickerCollection = new Ticker();
-                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmmss');
+                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmmss').replace(datePattern,'0');
                         tickerCollection.source = source;
                         var elem_market = elem.code.split(".")[2].split("-")[0];    // CRIX.UPBIT.KRW-ADA
                         var elem_coin = elem.code.split(".")[2].split("-")[1];
