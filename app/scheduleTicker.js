@@ -192,7 +192,7 @@ var getTickers3 = schedule.scheduleJob('* * * 1 * *', function(){
 
 // 10분에 1번씩 = '*/10 * * * *'
 //var getTickers4 = schedule.scheduleJob('* * * 1 * *', function(){
-var getTickers4 = schedule.scheduleJob('*/10 * * * * *', function(){
+var getTickers4 = schedule.scheduleJob('10 * * * * *', function(){
     var source = 'upbit';
 
     var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
