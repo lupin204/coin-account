@@ -70,9 +70,12 @@ var exchangeJob = schedule.scheduleJob('30 1 * * * *', function(){
 
 // 최근 2일간의 Ticker정보만 저장 scheduling : 매일 0시 0분 30초
 var removeOldTickerJob = schedule.scheduleJob('30 0 0 * * *', function(){
-    var twoDaysAgo = moment().add(-2, 'days').utcOffset(9).format('YYYYMMDDHHmm00');
-    Ticker.remove( {'created': twoDaysAgo} );
-    console.log("[removeOldTicker] " + twoDaysAgo);
+    var twoDaysAgo = moment().add(-2, 'days').utcOffset(9).format('YYYYMMDD');
+    var regExp = '^'+twoDaysAgo;
+    Ticker.remove( {'created': new RegExp(regExp)}, function(err, res) {
+        if (err) console.log(err);
+        console.log("[removeOldTicker] " + twoDaysAgo + " : " + res.n + " ticker is removed.");
+    });
 });
 
 
