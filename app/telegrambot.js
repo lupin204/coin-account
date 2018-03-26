@@ -5,10 +5,9 @@ const Exchange = require('../models/exchange');
 const Ticker = require('../models/ticker');
 
 // replace the value below with the Telegram token you receive from @BotFather
-// coinbox_bot
-const token = '499059630:AAFJVXJtTpEftHBzpADiTFzWy9ANAMw1BJk';
-// coinbox_testbot
-//const token = '523831757:AAHFvSICYhrDvz8F7uESxLKu0CIxV17b9ME';
+
+//coinbox_testbot
+const token = process.env.TELEGRAM_TOKEN_TEST;
 
 // test channel
 const channedId = '@lupin204';
