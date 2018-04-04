@@ -34,7 +34,7 @@ rule.second = 50;
 --> scheduleJob('* * * * * *', function(){
 */
 // exchange rates scheduling : 매 시 1분 30초
-//var exchangeJob = schedule.scheduleJob('* * * 1 * *', function(){
+//var exchangeJob = schedule.scheduleJob('* * * 1 1 *', function(){
 var exchangeJob = schedule.scheduleJob('30 1 * * * *', function(){
     var currencies = 'KRW,JPY'
     //var reqUrl = 'https://openexchangerates.org/api/latest.json?&app_id=' + constants.apiKey.openexchangerates + '&symbols=' + currencies;
@@ -79,7 +79,7 @@ var removeOldTickerJob = schedule.scheduleJob('30 0 0 * * *', function(){
 });
 
 
-var getTickers = schedule.scheduleJob('* * * 1 * *', function(){
+var getTickers = schedule.scheduleJob('* * * 1 1 *', function(){
 //var getTickers = schedule.scheduleJob('1 * * * * *', function(){
     var source = 'bithumb';
 
@@ -115,7 +115,7 @@ var getTickers = schedule.scheduleJob('* * * 1 * *', function(){
     }, 100);
 });
 
-var getTickers2 = schedule.scheduleJob('* * * 1 * *', function(){
+var getTickers2 = schedule.scheduleJob('* * * 1 1 *', function(){
 //var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
     var source = 'coinnest';
 
@@ -150,7 +150,7 @@ var getTickers2 = schedule.scheduleJob('* * * 1 * *', function(){
     }, 100);
 });
 
-var getTickers3 = schedule.scheduleJob('* * * 1 * *', function(){
+var getTickers3 = schedule.scheduleJob('* * * 1 1 *', function(){
 //var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
     var source = 'coinrail';
     
@@ -194,8 +194,8 @@ var getTickers3 = schedule.scheduleJob('* * * 1 * *', function(){
 });
 
 // 10분에 1번씩 = '*/10 * * * *'
-//var getTickers4 = schedule.scheduleJob('* * * 1 * *', function(){
-var getTickers4 = schedule.scheduleJob('10 * * * * *', function(){
+//var getTickers4 = schedule.scheduleJob('* * * 1 1 *', function(){
+var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
     var source = 'upbit';
 
     var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
@@ -211,7 +211,8 @@ var getTickers4 = schedule.scheduleJob('10 * * * * *', function(){
                     // BTC KRW 갯수 = 157
                     if (elem.code.split(".")[2].split("-")[0] === 'KRW' || elem.code.split(".")[2].split("-")[0] === 'BTC') {
                         var tickerCollection = new Ticker();
-                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmmss').replace(datePattern,'0');
+                        //tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmmss').replace(datePattern,'0');
+                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm10');
                         tickerCollection.source = source;
                         var elem_market = elem.code.split(".")[2].split("-")[0];    // CRIX.UPBIT.KRW-ADA
                         var elem_coin = elem.code.split(".")[2].split("-")[1];
@@ -245,7 +246,7 @@ var getTickers4 = schedule.scheduleJob('10 * * * * *', function(){
 
 // 1분에 1번씩 = '*/10 * * * *'
 // 최근 3분봉
-var getPump = schedule.scheduleJob('* * * 1 * *', function(){
+var getPump = schedule.scheduleJob('* * * 1 1 *', function(){
 //var getPump = schedule.scheduleJob('10 * * * * *', function(){
     var source = 'upbit';
     var pumpGap = 3;    // 3분변화량 (4틱)
@@ -324,6 +325,80 @@ var getPump = schedule.scheduleJob('* * * 1 * *', function(){
         }
         console.log(rtnMsg);
         if (sendTelegram) bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
+    });
+});
+
+//var getPumpUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
+var getPumpUpbit = schedule.scheduleJob('20 * * * * *', function(){
+    var source = 'upbit';
+
+    var tasks = [
+        function(callback){
+            var fiveMinutesAgo = moment().add(-2,'minute').utcOffset(9).format('YYYYMMDDHHmm10');
+            Ticker.find()
+            .where('source').equals(source)
+            .where('created').gt(fiveMinutesAgo)
+            .where('market').in(['KRW','BTC'])
+            .sort({'coin':1, 'market':1, 'created':1})
+            .select('-_id created pair market coin price bidVolume askVolume volumeRank')
+            .then(function(tickers){
+                console.log(tickers.length);
+                callback(null, tickers);
+            })
+            .catch(function(err){
+                console.error(err);
+            });
+        },
+        function(tickers, callback){
+            tickers = com.groupByArray(tickers, 'pair');
+            tickers = com.tempFunc2(tickers);
+            
+            var sendTelegram = false;
+            var rtnMsg = "[Pump - 1 minutes] " + moment().utcOffset(9).format('MM-DD HH:mm') + "\n";
+
+            var tickersLength = tickers.length;
+            for (var i=0; i<tickersLength; i++) {
+                // #1.최종순위 10위 이내
+                if (tickers[i].volumeRank < 10) {
+                    // 가격상승 1%이상
+                    if (tickers[i].priceGap > 1)  {
+                        // 순위상승 이전순위에 비해 50%이상
+                        if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
+                            // 매수량 매도량 모두 존재하는 경우
+                            if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
+                                rtnMsg += "[" + tickers[i].pair + " " + tickers[i].volumeRank + " ] : " + tickers[i].priceGap + "% UP\n";
+                                sendTelegram = true;
+                            }
+                        }
+                    }
+                // #2.최종순위 150위 이내
+                } else if (tickers[i].volumeRank < 150) {
+                    // 가격상승 0.8% 이상
+                    if (tickers[i].priceGap > 0.8) {
+                        // 순위상승 50위 이상
+                        if (tickers[i].volumeRankGap > 50) {
+                            // 매수량 매도량 모두 존재하는 경우
+                            if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
+                                rtnMsg += "[" + tickers[i].pair + " " + tickers[i].volumeRank + " ] : " + tickers[i].priceGap + "% UP\n";
+                                sendTelegram = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            callback(null, tickers, rtnMsg, sendTelegram);
+        }
+    ];
+
+    async.waterfall(tasks, function(err, result, rtnMsg, sendTelegram){
+        if (err){
+            res.status(500).json({error: 'system error'});
+        }
+        if (sendTelegram) {
+            bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
+            console.log(rtnMsg);
+        } 
     });
 });
 
