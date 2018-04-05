@@ -196,7 +196,7 @@ router.post(['/setTickers/:source'], function(req, res, next) {
 
 router.get(['/pump'], function(req, res, next) {
     var source = 'upbit';
-    
+
     var tasks = [
         function(callback){
             var fiveMinutesAgo = moment().add(-2,'minute').utcOffset(9).format('YYYYMMDDHHmm10');
@@ -207,6 +207,7 @@ router.get(['/pump'], function(req, res, next) {
             .sort({'coin':1, 'market':1, 'created':1})
             .select('-_id created pair market coin price bidVolume askVolume volumeRank')
             .then(function(tickers){
+                console.log(tickers.length);
                 callback(null, tickers);
             })
             .catch(function(err){
@@ -216,7 +217,7 @@ router.get(['/pump'], function(req, res, next) {
         function(tickers, callback){
             tickers = com.groupByArray(tickers, 'pair');
             tickers = com.tempFunc2(tickers);
- 
+            
             var sendTelegram = false;
             var rtnMsg = "[Pump - 1 minutes] " + moment().utcOffset(9).format('MM-DD HH:mm') + "\n";
 
@@ -226,11 +227,12 @@ router.get(['/pump'], function(req, res, next) {
                 if (tickers[i].volumeRank < 10) {
                     // 가격상승 1%이상
                     if (tickers[i].priceGap > 1)  {
-                        // 순위상승 이전순위에 비해 50%이상
-                        if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
+                        // 순위상승 이전순위에 비해 2위 이상 (이전순위 3위 이하는 체크되지 않음)
+                        if (tickers[i].volumeRankGap > 2) {
+                        //if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
                             // 매수량 매도량 모두 존재하는 경우
                             if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
-                                rtnMsg += "[" + tickers[i].pair + " " + tickers[i].volumeRank + " ] : " + tickers[i].priceGap + "% UP\n";
+                                rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
                                 sendTelegram = true;
                             }
                         }
@@ -243,7 +245,7 @@ router.get(['/pump'], function(req, res, next) {
                         if (tickers[i].volumeRankGap > 50) {
                             // 매수량 매도량 모두 존재하는 경우
                             if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
-                                rtnMsg += "[" + tickers[i].pair + " " + tickers[i].volumeRank + " ] : " + tickers[i].priceGap + "% UP\n";
+                                rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
                                 sendTelegram = true;
                             }
                         }
@@ -254,22 +256,19 @@ router.get(['/pump'], function(req, res, next) {
             callback(null, tickers, rtnMsg, sendTelegram);
         }
     ];
+
     async.waterfall(tasks, function(err, result, rtnMsg, sendTelegram){
         if (err){
             res.status(500).json({error: 'system error'});
         }
-        //console.log(JSON.stringify(result));
-        //console.log(rtnMsg);
         if (sendTelegram) {
-            bot.telegrambot.sendMessage(bot.channedId, rtnMsg, {parse_mode : "markdown"});
-            res.status(200).json(result);
+            bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
+            res.status(200).json(rtnMsg);
         } else {
-            bot.telegrambot.sendMessage(bot.channedId, rtnMsg + 'no pump', {parse_mode : "markdown"});
-            res.status(200).json("no pump");
+            bot.telegrambot.sendMessage(bot.channedId, "no pump");
+            res.status(200).json("no pump");            
         }
-        
     });
-    //res.send("respond with a resource");
 });
 
 router.get(['/check/:pair'], function(req, res, next) {

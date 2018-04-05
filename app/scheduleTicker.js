@@ -212,7 +212,7 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
                     if (elem.code.split(".")[2].split("-")[0] === 'KRW' || elem.code.split(".")[2].split("-")[0] === 'BTC') {
                         var tickerCollection = new Ticker();
                         //tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmmss').replace(datePattern,'0');
-                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm10');
+                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
                         tickerCollection.source = source;
                         var elem_market = elem.code.split(".")[2].split("-")[0];    // CRIX.UPBIT.KRW-ADA
                         var elem_coin = elem.code.split(".")[2].split("-")[1];
@@ -334,7 +334,7 @@ var getPumpUpbit = schedule.scheduleJob('20 * * * * *', function(){
 
     var tasks = [
         function(callback){
-            var fiveMinutesAgo = moment().add(-2,'minute').utcOffset(9).format('YYYYMMDDHHmm10');
+            var fiveMinutesAgo = moment().add(-2,'minute').utcOffset(9).format('YYYYMMDDHHmm00');
             Ticker.find()
             .where('source').equals(source)
             .where('created').gt(fiveMinutesAgo)
@@ -399,7 +399,7 @@ var getPumpUpbit = schedule.scheduleJob('20 * * * * *', function(){
         if (sendTelegram) {
             bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
             console.log(rtnMsg);
-        } 
+        }
     });
 });
 
