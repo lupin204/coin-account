@@ -234,6 +234,36 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
                                 console.error(err);
                             }
                         });
+
+                        var tickersUpbit = com.tickersUpbit;
+                        var pair = elem_coin+"-"+elem_market;
+                        var nowTickerOfPair = {};
+                        nowTickerOfPair.created = tickerCollection.created;
+                        nowTickerOfPair.pair = tickerCollection.pair;
+                        nowTickerOfPair.market = tickerCollection.market;
+                        nowTickerOfPair.coin = tickerCollection.coin;
+                        nowTickerOfPair.price = tickerCollection.price;
+                        nowTickerOfPair.volumeRank = tickerCollection.volumeRank;
+                        nowTickerOfPair.askVolume = tickerCollection.askVolume;
+                        nowTickerOfPair.bidVolume = tickerCollection.bidVolume;
+
+                        if (tickersUpbit[pair]) {
+                            // normal case - saved 2 ticks
+                            if (tickersUpbit[pair].length > 1) {
+                                tickersUpbit[pair].shift();
+                                tickersUpbit[pair].push(nowTickerOfPair);
+                            // saved 1 tick
+                            } else {
+                                tickersUpbit[pair].push(nowTickerOfPair);
+                            }
+                        // saved no tick
+                        } else {
+                            tickersUpbit[pair] = [];
+                            tickersUpbit[pair].push(nowTickerOfPair);
+                        }
+
+                        com.tickersUpbit = tickersUpbit;
+
                     }
                 }
             } 
@@ -329,78 +359,55 @@ var getPump = schedule.scheduleJob('* * * 1 1 *', function(){
 });
 
 //var getPumpUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
-var getPumpUpbit = schedule.scheduleJob('20 * * * * *', function(){
+var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
     var source = 'upbit';
 
-    var tasks = [
-        function(callback){
-            var fiveMinutesAgo = moment().add(-2,'minute').utcOffset(9).format('YYYYMMDDHHmm00');
-            Ticker.find()
-            .where('source').equals(source)
-            .where('created').gt(fiveMinutesAgo)
-            .where('market').in(['KRW','BTC'])
-            .sort({'coin':1, 'market':1, 'created':1})
-            .select('-_id created pair market coin price bidVolume askVolume volumeRank')
-            .then(function(tickers){
-                console.log(tickers.length);
-                callback(null, tickers);
-            })
-            .catch(function(err){
-                console.error(err);
-            });
-        },
-        function(tickers, callback){
-            tickers = com.groupByArray(tickers, 'pair');
-            tickers = com.tempFunc2(tickers);
-            
-            var sendTelegram = false;
-            var rtnMsg = "[Pump - 1 minutes] " + moment().utcOffset(9).format('MM-DD HH:mm') + "\n";
+    var tickers = com.tickersUpbit;
+    // 2틱이상 메모리(com.tickersUpbit)에 저장된 이후 펌핑 체크
+    if (Object.keys(tickers).length > 0 && tickers[Object.keys(tickers)[0]].length > 1) {
+        var tickers = com.tempFunc2(com.tickersUpbit);
+                
+        var sendTelegram = false;
+        var rtnMsg = "[Pump] " + moment().utcOffset(9).format('MM-DD HH:mm') + "\n";
 
-            var tickersLength = tickers.length;
-            for (var i=0; i<tickersLength; i++) {
-                // #1.최종순위 10위 이내
-                if (tickers[i].volumeRank < 10) {
-                    // 가격상승 1%이상
-                    if (tickers[i].priceGap > 1)  {
-                        // 순위상승 이전순위에 비해 2위 이상 (이전순위 3위 이하는 체크되지 않음)
-                        if (tickers[i].volumeRankGap > 2) {
-                        //if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
-                            // 매수량 매도량 모두 존재하는 경우
-                            if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
-                                rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
-                                sendTelegram = true;
-                            }
+        var tickersLength = tickers.length;
+        for (var i=0; i<tickersLength; i++) {
+            // #1.최종순위 10위 이내
+            if (tickers[i].volumeRank < 10) {
+                // 가격상승 1%이상
+                if (tickers[i].priceGap > 1)  {
+                    // 순위상승 이전순위에 비해 2위 이상 (이전순위 3위 이하는 체크되지 않음)
+                    if (tickers[i].volumeRankGap > 2) {
+                    //if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
+                        // 매수량 매도량 모두 존재하는 경우
+                        if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
+                            rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
+                            sendTelegram = true;
                         }
                     }
-                // #2.최종순위 150위 이내
-                } else if (tickers[i].volumeRank < 150) {
-                    // 가격상승 0.8% 이상
-                    if (tickers[i].priceGap > 0.8) {
-                        // 순위상승 50위 이상
-                        if (tickers[i].volumeRankGap > 50) {
-                            // 매수량 매도량 모두 존재하는 경우
-                            if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
-                                rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
-                                sendTelegram = true;
-                            }
+                }
+            // #2.최종순위 150위 이내
+            } else if (tickers[i].volumeRank < 150) {
+                // 가격상승 0.8% 이상
+                if (tickers[i].priceGap > 0.8) {
+                    // 순위상승 50위 이상
+                    if (tickers[i].volumeRankGap > 50) {
+                        // 매수량 매도량 모두 존재하는 경우
+                        if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
+                            rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
+                            sendTelegram = true;
                         }
                     }
                 }
             }
-            
-            callback(null, tickers, rtnMsg, sendTelegram);
         }
-    ];
 
-    async.waterfall(tasks, function(err, result, rtnMsg, sendTelegram){
-        if (err){
-            res.status(500).json({error: 'system error'});
-        }
         if (sendTelegram) {
             bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
             console.log(rtnMsg);
         }
-    });
+    }
+
 });
 
 module.exports = {

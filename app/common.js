@@ -1,5 +1,7 @@
 var com;
 com = {
+    tickersUpbit : {},
+    
     toSatoshiFormat : function(value, market){
         if (typeof(value) == 'undefined') value = 0;
         if (typeof(market) == 'undefined') market = 'BTC';
@@ -51,7 +53,7 @@ com = {
             elem.fromVolumeRank = Number(json[key][0].volumeRank);
             elem.volumeRank = Number(json[key][1].volumeRank);
             elem.priceGapNum = com.toSatoshiFormat(json[key][1].price - json[key][0].price, json[key][0].market);
-            
+
             elem.priceGap = Number((json[key][1].price / json[key][0].price - 1)*100).toFixed(2);
             elem.bidVolumeGap = Math.round(json[key][1].bidVolume - json[key][0].bidVolume);
             elem.askVolumeGap = Math.round(json[key][1].askVolume - json[key][0].askVolume);

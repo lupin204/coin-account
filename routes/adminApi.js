@@ -261,6 +261,7 @@ router.get(['/pump'], function(req, res, next) {
         if (err){
             res.status(500).json({error: 'system error'});
         }
+        //res.status(200).json(result);
         if (sendTelegram) {
             bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
             res.status(200).json(rtnMsg);
@@ -289,8 +290,10 @@ router.get(['/check/:pair'], function(req, res, next) {
     .catch(function(err){
         console.error(err);
     });
+});
 
-
+router.get(['/getTickersUpbit/'], function(req, res, next) {
+    res.status(200).json(com.tickersUpbit);
 });
 
 module.exports = router;
