@@ -362,11 +362,12 @@ var getPumpUpbit = schedule.scheduleJob('20 * * * * *', function(){
                 if (tickers[i].volumeRank < 10) {
                     // 가격상승 1%이상
                     if (tickers[i].priceGap > 1)  {
-                        // 순위상승 이전순위에 비해 50%이상
-                        if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
+                        // 순위상승 이전순위에 비해 2위 이상 (이전순위 3위 이하는 체크되지 않음)
+                        if (tickers[i].volumeRankGap > 2) {
+                        //if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
                             // 매수량 매도량 모두 존재하는 경우
                             if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
-                                rtnMsg += "[" + tickers[i].pair + " " + tickers[i].volumeRank + " ] : " + tickers[i].priceGap + "% UP\n";
+                                rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
                                 sendTelegram = true;
                             }
                         }
@@ -379,7 +380,7 @@ var getPumpUpbit = schedule.scheduleJob('20 * * * * *', function(){
                         if (tickers[i].volumeRankGap > 50) {
                             // 매수량 매도량 모두 존재하는 경우
                             if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
-                                rtnMsg += "[" + tickers[i].pair + " " + tickers[i].volumeRank + " ] : " + tickers[i].priceGap + "% UP\n";
+                                rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
                                 sendTelegram = true;
                             }
                         }
