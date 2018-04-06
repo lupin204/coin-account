@@ -405,6 +405,8 @@ var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
         if (sendTelegram) {
             bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
             console.log(rtnMsg);
+        } else {
+            console.log(rtnMsg + " : no pump");
         }
     }
 
