@@ -296,5 +296,15 @@ router.get(['/getTickersUpbit/'], function(req, res, next) {
     res.status(200).json(com.tickersUpbit);
 });
 
+router.get(['/getTickersTempUpbit/'], function(req, res, next) {
+    var tickers = com.tickersUpbit;
+    if (Object.keys(tickers).length > 0 && tickers[Object.keys(tickers)[0]].length > 1) {
+        res.status(200).json(com.tempFunc2(tickers));
+    } else {
+        res.status(200).json("not yet");
+    }
+});
+
+
 module.exports = router;
 

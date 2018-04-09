@@ -200,6 +200,7 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
 
     var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
     var datePattern = /.$/;
+    var tickersUpbit = com.tickersUpbit;
 
     request(reqUrl, function(err, res, body){
         if (!err && res.statusCode === 200) {
@@ -235,7 +236,6 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
                             }
                         });
 
-                        var tickersUpbit = com.tickersUpbit;
                         var pair = elem_coin+"-"+elem_market;
                         var nowTickerOfPair = {};
                         nowTickerOfPair.created = tickerCollection.created;
@@ -262,13 +262,16 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
                             tickersUpbit[pair].push(nowTickerOfPair);
                         }
 
-                        com.tickersUpbit = tickersUpbit;
+                        
 
                     }
-                }
+                } // end of loop
             } 
         }
-    });
+        com.tickersUpbit = tickersUpbit;
+    }); // end of request
+
+
     setTimeout(() => {
         console.log('[upbit] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmmss'));
     }, 100);
@@ -362,7 +365,7 @@ var getPump = schedule.scheduleJob('* * * 1 1 *', function(){
 var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
     var source = 'upbit';
 
-    var tickers = com.tickersUpbit;
+    var tickers = com.tickersUpbit;console.log(Object.keys(tickers).length + " - " + tickers[Object.keys(tickers)[0]].length);
     // 2틱이상 메모리(com.tickersUpbit)에 저장된 이후 펌핑 체크
     if (Object.keys(tickers).length > 0 && tickers[Object.keys(tickers)[0]].length > 1) {
         var tickers = com.tempFunc2(com.tickersUpbit);
