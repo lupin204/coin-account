@@ -292,6 +292,31 @@ router.get(['/check/:pair'], function(req, res, next) {
     });
 });
 
+router.get(['/check2/:pair'], function(req, res, next) {
+    var source = 'upbit';
+    var pair = req.params.pair;
+    var fromDate = req.query.from;
+    var toDate = req.query.to;
+    if (!pair) {
+        var rtnMsg = "/check/BTC-KRW";
+        return res.status(200).json(rtnMsg);
+    }
+    Ticker.find()
+    .where('source').equals(source)
+    .where('pair').equals(pair)
+    .where('created').gte(fromDate).where('created').lte(toDate)
+    .sort({'created':1}).select('-_id created price bidVolume askVolume volumeRank')
+    .then(function(tickers){
+        var groupedTickers = com.groupByArray(tickers);
+        var newTickers = com.tempFunc2(groupedTickers);
+        res.status(200).json(newTickers);
+    })
+    .catch(function(err){
+        console.error(err);
+    });
+});
+
+
 router.get(['/getTickersUpbit/'], function(req, res, next) {
     res.status(200).json(com.tickersUpbit);
 });

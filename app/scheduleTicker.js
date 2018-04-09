@@ -247,6 +247,10 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
                         nowTickerOfPair.askVolume = tickerCollection.askVolume;
                         nowTickerOfPair.bidVolume = tickerCollection.bidVolume;
 
+                        if (pair == 'BTC-KRW') {
+                            com.tickerUpbitBtc = tickerCollection.price;
+                        }
+
                         if (tickersUpbit[pair]) {
                             // normal case - saved 2 ticks
                             if (tickersUpbit[pair].length > 1) {
@@ -365,7 +369,8 @@ var getPump = schedule.scheduleJob('* * * 1 1 *', function(){
 var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
     var source = 'upbit';
 
-    var tickers = com.tickersUpbit;console.log(Object.keys(tickers).length + " - " + tickers[Object.keys(tickers)[0]].length);
+    var tickers = com.tickersUpbit;
+    //console.log(Object.keys(tickers).length + " - " + tickers[Object.keys(tickers)[0]].length);
     // 2틱이상 메모리(com.tickersUpbit)에 저장된 이후 펌핑 체크
     if (Object.keys(tickers).length > 0 && tickers[Object.keys(tickers)[0]].length > 1) {
         var tickers = com.tempFunc2(com.tickersUpbit);
@@ -376,32 +381,36 @@ var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
         var tickersLength = tickers.length;
         for (var i=0; i<tickersLength; i++) {
             // #1.최종순위 10위 이내
-            if (tickers[i].volumeRank < 10) {
-                // 가격상승 1%이상
-                if (tickers[i].priceGap > 1)  {
-                    // 순위상승 이전순위에 비해 2위 이상 (이전순위 3위 이하는 체크되지 않음)
-                    if (tickers[i].volumeRankGap > 2) {
-                    //if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
-                        // 매수량 매도량 모두 존재하는 경우
-                        if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
-                            rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
-                            sendTelegram = true;
-                        }
-                    }
-                }
+            // 가격상승 1%이상
+            // 순위상승 이전순위에 비해 2위 이상 (이전순위 3위 이하는 체크되지 않음)
+            // 매수량 매도량 모두 존재하는 경우
+            // 매수량이 매도량보다 큰 경우
+            // 순매수(매수-매도)금액이 10M krw 이상
+            //if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
+            if (tickers[i].volumeRank < 10 && tickers[i].priceGap > 1
+                && tickers[i].volumeRankGap > 2
+                && tickers[i].bidVolumeGap > 1
+                && tickers[i].askVolumeGap > 1
+                && tickers[i].bidAskVolume > tickers[i].askVolume
+                && tickers[i].bidVolumeGapPrice - tickers[i].askVolumeGapPrice > 10000000) {
+                rtnMsg += "[" + tickers[i].pair + "] : " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "( "+ (tickers[i].volumeGapPrice/100000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
+                sendTelegram = true;
+
             // #2.최종순위 150위 이내
-            } else if (tickers[i].volumeRank < 150) {
-                // 가격상승 0.8% 이상
-                if (tickers[i].priceGap > 0.8) {
-                    // 순위상승 50위 이상
-                    if (tickers[i].volumeRankGap > 50) {
-                        // 매수량 매도량 모두 존재하는 경우
-                        if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
-                            rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
-                            sendTelegram = true;
-                        }
-                    }
-                }
+            // 가격상승 0.8% 이상
+            // 순위상승 50위 이상
+            // 매수량 매도량 모두 존재하는 경우
+            // 매수량이 매도량보다 큰 경우
+            // 순매수(매수-매도)금액이 10M krw 이상
+            } else if (tickers[i].volumeRank < 150
+                && tickers[i].priceGap > 0.8
+                && tickers[i].volumeRankGap > 50
+                && tickers[i].bidVolumeGap > 1
+                && tickers[i].askVolumeGap > 1
+                && tickers[i].bidAskVolume > tickers[i].askVolume
+                && tickers[i].bidVolumeGapPrice - tickers[i].askVolumeGapPrice > 10000000) {
+                rtnMsg += "[" + tickers[i].pair + "] : " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "( "+ (tickers[i].volumeGapPrice/100000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
+                sendTelegram = true;
             }
         }
 
