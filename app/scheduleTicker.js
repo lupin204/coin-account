@@ -62,6 +62,7 @@ var exchangeJob = schedule.scheduleJob('30 1 * * * *', function(){
                             console.error(err);
                         }
                     });
+
                 }
             }
         }
@@ -277,7 +278,7 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
 
 
     setTimeout(() => {
-        console.log('[upbit] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmmss'));
+        //console.log('[upbit] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmmss'));
     }, 100);
 });
 
@@ -391,7 +392,7 @@ var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
                 && tickers[i].volumeRankGap > 2
                 && tickers[i].bidVolumeGap > 1
                 && tickers[i].askVolumeGap > 1
-                && tickers[i].bidAskVolume > tickers[i].askVolume
+                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap
                 && tickers[i].bidVolumeGapPrice - tickers[i].askVolumeGapPrice > 10000000) {
                 rtnMsg += "[" + tickers[i].pair + "] : " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "( "+ (tickers[i].volumeGapPrice/100000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
@@ -407,7 +408,7 @@ var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
                 && tickers[i].volumeRankGap > 50
                 && tickers[i].bidVolumeGap > 1
                 && tickers[i].askVolumeGap > 1
-                && tickers[i].bidAskVolume > tickers[i].askVolume
+                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap
                 && tickers[i].bidVolumeGapPrice - tickers[i].askVolumeGapPrice > 10000000) {
                 rtnMsg += "[" + tickers[i].pair + "] : " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "( "+ (tickers[i].volumeGapPrice/100000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
@@ -418,7 +419,7 @@ var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
             bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
             console.log(rtnMsg);
         } else {
-            console.log(rtnMsg + " : no pump");
+            //console.log(rtnMsg + " : no pump");
         }
     }
 

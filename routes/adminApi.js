@@ -194,65 +194,69 @@ router.post(['/setTickers/:source'], function(req, res, next) {
     }
 });
 
-router.get(['/pump'], function(req, res, next) {
+router.get(['/pump/:pair'], function(req, res, next) {
     var source = 'upbit';
+    var pair = req.params.pair;
+    var fromDate = req.query.from;
+    var toDate = req.query.to;
 
     var tasks = [
         function(callback){
-            var fiveMinutesAgo = moment().add(-2,'minute').utcOffset(9).format('YYYYMMDDHHmm10');
             Ticker.find()
             .where('source').equals(source)
-            .where('created').gt(fiveMinutesAgo)
-            .where('market').in(['KRW','BTC'])
-            .sort({'coin':1, 'market':1, 'created':1})
-            .select('-_id created pair market coin price bidVolume askVolume volumeRank')
+            .where('pair').equals(pair)
+            .where('created').gte(fromDate).where('created').lte(toDate)
+            .sort({'created':1}).select('-_id created price bidVolume askVolume volumeRank')
             .then(function(tickers){
-                console.log(tickers.length);
-                callback(null, tickers);
+                var groupedTickers = com.groupByArray(tickers);
+                var newTickers = com.tempFunc2(groupedTickers);
+                callback(null, newTickers);
             })
             .catch(function(err){
                 console.error(err);
             });
         },
         function(tickers, callback){
-            tickers = com.groupByArray(tickers, 'pair');
-            tickers = com.tempFunc2(tickers);
             
             var sendTelegram = false;
-            var rtnMsg = "[Pump - 1 minutes] " + moment().utcOffset(9).format('MM-DD HH:mm') + "\n";
-
+            var rtnMsg = "[Pump] " + moment().utcOffset(9).format('MM-DD HH:mm') + "\n";
+    
             var tickersLength = tickers.length;
             for (var i=0; i<tickersLength; i++) {
                 // #1.최종순위 10위 이내
-                if (tickers[i].volumeRank < 10) {
-                    // 가격상승 1%이상
-                    if (tickers[i].priceGap > 1)  {
-                        // 순위상승 이전순위에 비해 2위 이상 (이전순위 3위 이하는 체크되지 않음)
-                        if (tickers[i].volumeRankGap > 2) {
-                        //if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
-                            // 매수량 매도량 모두 존재하는 경우
-                            if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
-                                rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
-                                sendTelegram = true;
-                            }
-                        }
-                    }
+                // 가격상승 1%이상
+                // 순위상승 이전순위에 비해 2위 이상 (이전순위 3위 이하는 체크되지 않음)
+                // 매수량 매도량 모두 존재하는 경우
+                // 매수량이 매도량보다 큰 경우
+                // 순매수(매수-매도)금액이 10M krw 이상
+                //if (tickers[i].volumeRank/2 > tickers[i].volumeRankGap) {
+                if (tickers[i].volumeRank < 10 && tickers[i].priceGap > 1
+                    && tickers[i].volumeRankGap > 2
+                    && tickers[i].bidVolumeGap > 1
+                    && tickers[i].askVolumeGap > 1
+                    && tickers[i].bidVolumeGap > tickers[i].askVolumeGap
+                    && tickers[i].bidVolumeGapPrice - tickers[i].askVolumeGapPrice > 10000000) {
+                    rtnMsg += "[" + tickers[i].pair + "] : " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "( "+ (tickers[i].volumeGapPrice/100000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
+                    sendTelegram = true;
+    
                 // #2.최종순위 150위 이내
-                } else if (tickers[i].volumeRank < 150) {
-                    // 가격상승 0.8% 이상
-                    if (tickers[i].priceGap > 0.8) {
-                        // 순위상승 50위 이상
-                        if (tickers[i].volumeRankGap > 50) {
-                            // 매수량 매도량 모두 존재하는 경우
-                            if (tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1) {
-                                rtnMsg += "[" + tickers[i].pair + " ( " + tickers[i].fromVolumeRank + " -> " + tickers[i].volumeRank + " ) ] : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " )\n";
-                                sendTelegram = true;
-                            }
-                        }
-                    }
+                // 가격상승 0.8% 이상
+                // 순위상승 50위 이상
+                // 매수량 매도량 모두 존재하는 경우
+                // 매수량이 매도량보다 큰 경우
+                // 순매수(매수-매도)금액이 10M krw 이상
+                } else if (tickers[i].volumeRank < 150
+                    && tickers[i].priceGap > 0.8
+                    && tickers[i].volumeRankGap > 50
+                    && tickers[i].bidVolumeGap > 1
+                    && tickers[i].askVolumeGap > 1
+                    && tickers[i].bidVolumeGap > tickers[i].askVolumeGap
+                    && tickers[i].bidVolumeGapPrice - tickers[i].askVolumeGapPrice > 10000000) {
+                    rtnMsg += "[" + tickers[i].pair + "] : " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "( "+ (tickers[i].volumeGapPrice/100000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
+                    sendTelegram = true;
                 }
             }
-            
+
             callback(null, tickers, rtnMsg, sendTelegram);
         }
     ];
@@ -263,10 +267,10 @@ router.get(['/pump'], function(req, res, next) {
         }
         //res.status(200).json(result);
         if (sendTelegram) {
-            bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
+            //bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
             res.status(200).json(rtnMsg);
         } else {
-            bot.telegrambot.sendMessage(bot.channedId, "no pump");
+            //bot.telegrambot.sendMessage(bot.channedId, "no pump");
             res.status(200).json("no pump");            
         }
     });
