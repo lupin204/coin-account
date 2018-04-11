@@ -209,7 +209,7 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
         if (!err && res.statusCode === 200) {
             var json = JSON.parse(body);
             if (Object.keys(json).length > 0) {
-                console.log("[" + moment().utcOffset(9).format('YYYYMMDDHHmm00') + "] " + Object.keys(json).length + " " + source + " tickers is selected");
+                console.log("[" + moment().utcOffset(9).format('YYYY-MM-DD HH:mm') + "] " + Object.keys(json).length + " " + source + " tickers is selected");
                 for(key in json) {
                     var elem = json[key];
                     // BTC KRW 갯수 = 157
