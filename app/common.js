@@ -11,7 +11,7 @@ com = {
     },
     btcToKrw : function(value, market) {
         if (typeof(value) == 'undefined') value = 0;
-        if (typeof(market) == 'undefined') market = 'BTC';
+        if (typeof(market) == 'undefined') market = 'KRW';
         return (market.toUpperCase() === 'BTC') ? parseInt(Number(value)*com.tickerUpbitBtc) : Number(value);
     },
     // function([], group by attribute string)
@@ -27,6 +27,7 @@ com = {
             var elem = {};
             elem.created = json[i].created;
             elem.price = json[i].price;
+            elem.volume = json[i].volume;
             elem.bidVolume = json[i].bidVolume;
             elem.askVolume = json[i].askVolume;
             elem.volumeRank = json[i].volumeRank;
