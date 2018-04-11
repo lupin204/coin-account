@@ -57,12 +57,13 @@ var exchangeJob = schedule.scheduleJob('30 1 * * * *', function(){
                     exchange.currency = key;    // KRW | JPY
                     exchange.rates = (key === 'USD') ? krw : krw / json.rates[key];
 
-                    exchange.save(function(err, exchange){
-                        if(err) {
-                            console.error(err);
-                        }
-                    });
-
+                    if (com.isApp) {
+                        exchange.save(function(err, exchange){
+                            if(err) {
+                                console.error(err);
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -208,7 +209,7 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
         if (!err && res.statusCode === 200) {
             var json = JSON.parse(body);
             if (Object.keys(json).length > 0) {
-                console.log("[" + moment().utcOffset(9).format('YYYYMMDDHHmmss') + "] " + Object.keys(json).length + " " + source + " tickers is selected");
+                console.log("[" + moment().utcOffset(9).format('YYYYMMDDHHmm00') + "] " + Object.keys(json).length + " " + source + " tickers is selected");
                 for(key in json) {
                     var elem = json[key];
                     // BTC KRW 갯수 = 157
@@ -232,11 +233,13 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
                         //tickerCollection.risefall = elem.change;    // RISE || FALL (빨간불 파란불)
                         //tickerCollection.upbitObj = elem;
 
-                        tickerCollection.save(function(err, tickerCollection){
-                            if(err) {
-                                console.error(err);
-                            }
-                        });
+                        if (com.isApp) {
+                            tickerCollection.save(function(err, tickerCollection){
+                                if(err) {
+                                    console.error(err);
+                                }
+                            });
+                        }
 
                         var pair = elem_coin+"-"+elem_market;
                         var nowTickerOfPair = {};
@@ -283,92 +286,8 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
     }, 100);
 });
 
-// 1분에 1번씩 = '*/10 * * * *'
-// 최근 3분봉
-var getPump = schedule.scheduleJob('* * * 1 1 *', function(){
-//var getPump = schedule.scheduleJob('10 * * * * *', function(){
-    var source = 'upbit';
-    var pumpGap = 3;    // 3분변화량 (4틱)
-    
-    var tasks = [
-        function(callback){
-            var fiveMinutesAgo = moment().add(-1-pumpGap,'minute').utcOffset(9).format('YYYYMMDDHHmm00');
-            Ticker.find()
-            .where('source').equals(source)
-            .where('created').gt(fiveMinutesAgo)
-            //.where('pair').equals('SNT-BTC')
-            .where('market').in(['KRW','BTC'])
-            .sort({'coin':1, 'market':1, 'created':1}).select('created pair market coin price volume bidVolume askVolume bidAskTime volumeRank')
-            .then(function(tickers){
-                callback(null, tickers);
-            })
-            .catch(function(err){
-                console.error(err);
-            });
-        },
-        function(tickers, callback){
-            tickers = com.groupByArray(tickers, 'pair');
-            var i=0, tickerLength = Object.keys(tickers).length;
-            var chkPump = {
-                price: 0,
-                bidVolume: 0,
-                askVolume: 0,
-                bidAskTime: 0,
-                volumeRank: 0
-            };
-            var isPumping = 0;
-            var sendTelegram = false;
-            var rtnMsg = "[PUMP - " + pumpGap + "min ] " + moment().utcOffset(9).format('YYYY-MM-DD HH:mm');
-
-            for (key in tickers) {
-                //console.log(tickers[key]);
-
-                for (var j=0; j<pumpGap; j++) {
-                    // 가격 펌핑 - 0.1%
-                    if ((Number(tickers[key][j+1].price) / Number(tickers[key][j].price)) > 1) {
-                        // 거래량 체크 - ticker(1분)마다 계속 거래가 있었는지
-                        if (moment(tickers[key][j].created, 'YYYYMMDDHHmm00').minutes() === moment(tickers[key][j].bidAskTime, 'YYYYMMDDHHmm00').add(1, 'minutes').minutes()) {
-                            // 매수세 > 매도세 인지
-                            if (Number(tickers[key][j+1].bidVolume) - Number(tickers[key][j].bidVolume) > Number(tickers[key][j+1].askVolume) - Number(tickers[key][j].askVolume)) {
-                                // 거래량 상위 150등 이내인지 (총244코인)
-                                if (Number(tickers[key][j+1].volumeRank) < 150) {
-                                    //var debugTxt = key + " : " + Number(tickers[key][j].price) + " ==> " + Number(tickers[key][j+1].price) + " ~~ "+ (Number(tickers[key][j+1].bidVolume) - Number(tickers[key][j].bidVolume)) + " : " + (Number(tickers[key][j+1].askVolume) - Number(tickers[key][j].askVolume));
-                                    //console.log(debugTxt);
-                                    isPumping++;
-                                }
-                            }
-                        }
-                    } else {
-                        isPumping = 0;
-                    }
-                }
-
-                // 연속 상승
-                if (isPumping >= pumpGap) {
-                    var tickerFirst = tickers[key][0];
-                    var tickerLast = tickers[key][pumpGap];
-                    rtnMsg += "\n[" + key + "] : " + ((Number(tickerLast.price) / Number(tickerFirst.price) - 1) * 100).toFixed(2) + "% ( " + tickerLast.volumeRank + " )"
-                            + "\n(" + com.toSatoshiFormat(tickerFirst.price, tickerFirst.market) + " ==> " + com.toSatoshiFormat(tickerLast.price,tickerLast.market) + ")";
-                    //var debugTxt = "[" + key + "] : " + "" + Number(tickers[key][0].price) + " ==> " + Number(tickers[key][pumpGap].price + "( " + tickers[key][pumpGap].rank + " )");
-                    //console.log(debugTxt);
-                    sendTelegram = true;
-                }
-                isPumping = 0;
-            }
-            callback(null, tickers, rtnMsg, sendTelegram);
-        }
-    ];
-    async.waterfall(tasks, function(err, result, rtnMsg, sendTelegram){
-        if (err){
-            res.status(500).json({error: 'system error'});
-        }
-        console.log(rtnMsg);
-        if (sendTelegram) bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
-    });
-});
-
 //var getPumpUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
-var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
+var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
     var source = 'upbit';
 
     var tickers = com.tickersUpbit;
@@ -393,23 +312,23 @@ var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
                 && tickers[i].priceGap > 0.8
                 //&& tickers[i].volumeRankGap > 2
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
-                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap
+                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2
                 && tickers[i].volumeGapPrice > 100000000) {
                     rtnMsg += "1 [" + tickers[i].pair + "] : " + tickers[i].price + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
 
 
-            // #2.최종순위 20위 이내
+            // #2.최종순위 30위 이내
             // 가격상승 1%이상
-            // 순위상승 이전순위에 비해 2위 이상 (이전순위 3위 이하는 체크되지 않음)
+            // 순위상승 이전순위에 비해 10위 이상
             // 매수량 매도량 모두 존재하는 경우
-            // 매수량이 매도량보다 큰 경우
+            // 매수량이 매도량보다 2배 이상 큰 경우
             // 순매수(매수-매도)금액이 100M krw 이상
-            } else if (tickers[i].volumeRank < 20
+            } else if (tickers[i].volumeRank < 30
                 && tickers[i].priceGap > 1
                 && tickers[i].volumeRankGap > 10
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
-                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap
+                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2
                 && tickers[i].volumeGapPrice > 100000000) {
                 rtnMsg += "2 [" + tickers[i].pair + "] : " + Number(tickers[i].price) + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
@@ -424,7 +343,7 @@ var getPumpUpbit = schedule.scheduleJob('10 * * * * *', function(){
                 && tickers[i].priceGap > 0.8
                 && tickers[i].volumeRankGap > 80
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
-                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap
+                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2
                 && tickers[i].volumeGapPrice > 10000000) {
                 rtnMsg += "3 [" + tickers[i].pair + "] : " + tickers[i].price + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;

@@ -1,5 +1,8 @@
 var com;
 com = {
+
+    isApp : false,
+
     tickersUpbit : {},
 
     tickerUpbitBtc : 10000000,

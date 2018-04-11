@@ -15,6 +15,7 @@ const adminApi = require('./routes/adminApi');
 
 // [user-defined modules]
 //const schedule = require('./app/schedule');
+const com = require('./app/common.js');
 const scheduleTicker = require('./app/scheduleTicker');
 const mongoose = require('./app/mongo');
 //const telegrambot = require('./app/telegrambot');
@@ -48,6 +49,8 @@ app.use('/users', users);
 app.use('/api', testapi);
 app.use('/api2', testapi2);
 app.use('/admin/', adminApi);
+
+com.isApp = process.env.TELEGRAM_TOKEN_TEST ? true : false;
 
 app.use(function(req, res, next) {
   console.log("app - schedule - start");
