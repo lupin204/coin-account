@@ -197,11 +197,13 @@ router.post(['/setTickers/:source'], function(req, res, next) {
 router.get(['/pump/:pair'], function(req, res, next) {
     var source = 'upbit';
     var pair = req.params.pair;
-    var fromDate = req.query.from.replace('-','');
+    var fromDate = req.query.from;
+    var toDate = req.query.to;
+    fromDate = !fromDate ? '20180101000000' : fromDate.replace('-','').replace(/\s/gi,'');
+    toDate = !toDate ? '20181231235900' : toDate.replace('-','').replace(/\s/gi,'');
     fromDate = (fromDate.length == 12) ? (fromDate+'00') : fromDate;
-    var toDate = req.query.to.replace('-','');
     toDate = (toDate.length == 12) ? (toDate+'00') : toDate;
-
+    
     var tasks = [
         function(callback){
             Ticker.find()
@@ -296,14 +298,22 @@ router.get(['/pump/:pair'], function(req, res, next) {
 router.get(['/check/:pair'], function(req, res, next) {
     var source = 'upbit';
     var pair = req.params.pair;
+    var fromDate = req.query.from;
+    var toDate = req.query.to;
+    fromDate = !fromDate ? '20180101000000' : fromDate.replace('-','').replace(/\s/gi,'');
+    toDate = !toDate ? '20181231235900' : toDate.replace('-','').replace(/\s/gi,'');
+    fromDate = (fromDate.length == 12) ? (fromDate+'00') : fromDate;
+    toDate = (toDate.length == 12) ? (toDate+'00') : toDate;
     if (!pair) {
         var rtnMsg = "/check/BTC-KRW";
         return res.status(200).json(rtnMsg);
     }
+
     Ticker.find()
     .where('source').equals(source)
     .where('pair').equals(pair)
-    .sort({'created':1}).select('-_id created price bidVolume askVolume volumeRank')
+    .where('created').gte(fromDate).where('created').lte(toDate)
+    .sort({'created':1}).select('-_id created market price volume bidVolume askVolume volumeRank')
     .then(function(tickers){
         var newTickers = com.tempFunc(tickers);
         res.status(200).json(newTickers);
@@ -318,10 +328,16 @@ router.get(['/check2/:pair'], function(req, res, next) {
     var pair = req.params.pair;
     var fromDate = req.query.from;
     var toDate = req.query.to;
+
+    fromDate = !fromDate ? '20180101000000' : fromDate.replace('-','').replace(/\s/gi,'');
+    toDate = !toDate ? '20181231235900' : toDate.replace('-','').replace(/\s/gi,'');
+    fromDate = (fromDate.length == 12) ? (fromDate+'00') : fromDate;
+    toDate = (toDate.length == 12) ? (toDate+'00') : toDate;
     if (!pair) {
         var rtnMsg = "/check/BTC-KRW";
         return res.status(200).json(rtnMsg);
     }
+
     Ticker.find()
     .where('source').equals(source)
     .where('pair').equals(pair)
@@ -350,6 +366,7 @@ router.get(['/getTickersTempUpbit/'], function(req, res, next) {
         res.status(200).json("not yet");
     }
 });
+
 
 
 module.exports = router;
