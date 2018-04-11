@@ -6,6 +6,9 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+// [npm modules]
+var cors = require('cors');
+
 // [routes]
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -29,6 +32,9 @@ mongoose.Promise = global.Promise;
 mongoose();
 
 var app = express();
+
+// CORS(Cross Origin Resource Sharing) 허용
+app.use(cors());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
