@@ -59,16 +59,7 @@ app.use('/admin/', adminApi);
 com.isApp = process.env.TELEGRAM_TOKEN_TEST ? true : false;
 
 app.use(function(req, res, next) {
-  console.log("app - schedule - start");
-  //scheduleTicker.exchangeJob();
-  //scheduleTicker.getTickers();
-  //scheduleTicker.getTickers2();
-  //scheduleTicker.getTickers3();
-  //scheduleTicker.getTickers4();
-
-  //schedule.crawlingCoins();
-  //schedule.checkPump();
-  console.log("app - schedule - end");
+  console.log('[interceptor - before routing]');
   next();
 });
 

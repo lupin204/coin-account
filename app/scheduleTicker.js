@@ -80,130 +80,13 @@ var removeOldTickerJob = schedule.scheduleJob('30 0 0 * * *', function(){
     });
 });
 
-
-var getTickers = schedule.scheduleJob('* * * 1 1 *', function(){
-//var getTickers = schedule.scheduleJob('1 * * * * *', function(){
-    var source = 'bithumb';
-
-    var reqUrl = 'https://api.bithumb.com/public/ticker/all';
-
-    request(reqUrl, function(err, res, body){
-        if (!err && res.statusCode === 200) {
-            var json = JSON.parse(body);
-            if (json.status === '0000' && Object.keys(json.data).length > 0) {
-                delete json.data['date'];
-                console.log("[" + source + "] " + Object.keys(json.data).length + " tickers is selected");
-                for(key in json.data) {
-                    var elem = json.data[key];
-                    var tickerCollection = new Ticker();
-                    tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
-                    tickerCollection.source = source;
-                    tickerCollection.market = 'KRW';
-                    tickerCollection.coin = key;
-                    tickerCollection.price = json.data[key].closing_price;
-                    tickerCollection.volume = json.data[key].units_traded;
-
-                    tickerCollection.save(function(err, tickerCollection){
-                        if(err) {
-                            console.error(err);
-                        }
-                    });
-
-                }
-            } 
-        }
-    });
-    setTimeout(() => {
-        console.log('[bithumb] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmm00'));
-    }, 100);
-});
-
-var getTickers2 = schedule.scheduleJob('* * * 1 1 *', function(){
-//var getTickers2 = schedule.scheduleJob('2 * * * * *', function(){
-    var source = 'coinnest';
-
-    var reqUrl = 'https://api.coinnest.co.kr/api/pub/tickerall';
-
-    request(reqUrl, function(err, res, body){
-        if (!err && res.statusCode === 200) {
-            var json = JSON.parse(body);
-            if (Object.keys(json).length > 0) {
-                console.log("[" + source + "] " + Object.keys(json).length + " tickers is selected");
-                for(key in json) {
-                    var elem = json[key];
-                    var tickerCollection = new Ticker();
-                    tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
-                    tickerCollection.source = source;
-                    tickerCollection.market = key.split("_")[0];    // KRW
-                    tickerCollection.coin = key.split("_")[1];      // TRON
-                    tickerCollection.price = json[key].last;
-                    tickerCollection.volume = json[key].vol;
-
-                    tickerCollection.save(function(err, tickerCollection){
-                        if(err) {
-                            console.error(err);
-                        }
-                    });
-                }
-            } 
-        }
-    });
-    setTimeout(() => {
-        console.log('[coinnest] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmm00'));
-    }, 100);
-});
-
-var getTickers3 = schedule.scheduleJob('* * * 1 1 *', function(){
-//var getTickers3 = schedule.scheduleJob('3 * * * * *', function(){
-    var source = 'coinrail';
-    
-    Market.find()
-    .where('source').equals(source).select('coin market')
-    .then(function(markets) {
-        console.log("[" + source + "] " + markets.length + " items is selected");
-        
-        markets.forEach(function(market){
-            var reqUrl = 'https://api.coinrail.co.kr/public/last/order?currency=' + market.coin + "-" + market.market;
-
-            request(reqUrl, function(err, res, body){
-                if (!err && res.statusCode === 200) {
-                    var json = JSON.parse(body);
-                    if (json.error_code === 0) {
-                        var tickerCollection = new Ticker();
-                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
-                        tickerCollection.source = source;
-                        tickerCollection.market = market.market;    // KRW
-                        tickerCollection.coin = market.coin;      // TRON
-                        tickerCollection.price = json.last_price;
-                        tickerCollection.volume = 0;
-    
-                        tickerCollection.save(function(err, tickerCollection){
-                            if(err) {
-                                console.error(err);
-                            }
-                        });
-                    } 
-                }
-            });
-
-        });
-    })
-    .catch(function(err){
-        console.error(err);
-    });
-    setTimeout(() => {
-        console.log('[coinrail] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmm00'));
-    }, 100);
-});
-
 // 10분에 1번씩 = '*/10 * * * *'
-//var getTickers4 = schedule.scheduleJob('* * * 1 1 *', function(){
-var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
-    var source = 'upbit';
+var getTickersBinance = schedule.scheduleJob('* * * 1 1 *', function(){
+//var getTickersBinance = schedule.scheduleJob('1 * * * * *', function(){
+    var source = 'binance';
 
-    var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
-    var datePattern = /.$/;
-    var tickersUpbit = com.tickersUpbit;
+    var reqUrl = 'https://api.binance.com/api/v1/ticker/24hr';
+    //var tickersUpbit = com.tickersUpbit;
 
     request(reqUrl, function(err, res, body){
         if (!err && res.statusCode === 200) {
@@ -286,6 +169,96 @@ var getTickers4 = schedule.scheduleJob('3 * * * * *', function(){
     }, 100);
 });
 
+// 10분에 1번씩 = '*/10 * * * *'
+//var getTickersUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
+    var getTickersUpbit = schedule.scheduleJob('3 * * * * *', function(){
+        var source = 'upbit';
+    
+        var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
+        var datePattern = /.$/;
+        var tickersUpbit = com.tickersUpbit;
+    
+        request(reqUrl, function(err, res, body){
+            if (!err && res.statusCode === 200) {
+                var json = JSON.parse(body);
+                if (Object.keys(json).length > 0) {
+                    console.log("[" + moment().utcOffset(9).format('YYYY-MM-DD HH:mm') + "] " + Object.keys(json).length + " " + source + " tickers is selected");
+                    for(key in json) {
+                        var elem = json[key];
+                        // BTC KRW 갯수 = 157
+                        if (elem.code.split(".")[2].split("-")[0] === 'KRW' || elem.code.split(".")[2].split("-")[0] === 'BTC') {
+                            var tickerCollection = new Ticker();
+                            //tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmmss').replace(datePattern,'0');
+                            tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
+                            tickerCollection.source = source;
+                            var elem_market = elem.code.split(".")[2].split("-")[0];    // CRIX.UPBIT.KRW-ADA
+                            var elem_coin = elem.code.split(".")[2].split("-")[1];
+                            tickerCollection.pair = elem_coin + "-" + elem_market;
+                            tickerCollection.market = elem_market;    // KRW
+                            tickerCollection.coin = elem_coin;      // ADA
+                            tickerCollection.price = elem.tradePrice;
+                            tickerCollection.volume = elem.tradeVolume;
+                            tickerCollection.bidVolume = elem.accBidVolume;
+                            tickerCollection.askVolume = elem.accAskVolume;
+                            tickerCollection.bidAsk = elem.askBid;
+                            tickerCollection.bidAskTime = elem.tradeDate + elem.tradeTimeKst;
+                            tickerCollection.volumeRank = elem.rank;
+                            //tickerCollection.risefall = elem.change;    // RISE || FALL (빨간불 파란불)
+                            //tickerCollection.upbitObj = elem;
+    
+                            if (com.isApp) {
+                                tickerCollection.save(function(err, tickerCollection){
+                                    if(err) {
+                                        console.error(err);
+                                    }
+                                });
+                            }
+    
+                            var pair = elem_coin+"-"+elem_market;
+                            var nowTickerOfPair = {};
+                            nowTickerOfPair.created = tickerCollection.created;
+                            nowTickerOfPair.pair = tickerCollection.pair;
+                            nowTickerOfPair.market = tickerCollection.market;
+                            nowTickerOfPair.coin = tickerCollection.coin;
+                            nowTickerOfPair.price = tickerCollection.price;
+                            nowTickerOfPair.volumeRank = tickerCollection.volumeRank;
+                            nowTickerOfPair.askVolume = tickerCollection.askVolume;
+                            nowTickerOfPair.bidVolume = tickerCollection.bidVolume;
+    
+                            if (pair == 'BTC-KRW') {
+                                com.tickerUpbitBtc = tickerCollection.price;
+                            }
+    
+                            if (tickersUpbit[pair]) {
+                                // normal case - saved 2 ticks
+                                if (tickersUpbit[pair].length > 1) {
+                                    tickersUpbit[pair].shift();
+                                    tickersUpbit[pair].push(nowTickerOfPair);
+                                // saved 1 tick
+                                } else {
+                                    tickersUpbit[pair].push(nowTickerOfPair);
+                                }
+                            // saved no tick
+                            } else {
+                                tickersUpbit[pair] = [];
+                                tickersUpbit[pair].push(nowTickerOfPair);
+                            }
+    
+                            
+    
+                        }
+                    } // end of loop
+                } 
+            }
+            com.tickersUpbit = tickersUpbit;
+        }); // end of request
+    
+    
+        setTimeout(() => {
+            //console.log('[upbit] timeout 100ms - ' + moment().utcOffset(9).format('YYYYMMDDHHmmss'));
+        }, 100);
+    });
+
 //var getPumpUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
 var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
     var source = 'upbit';
@@ -307,13 +280,13 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
             // 순위상승 해당없음
             // 매수량 매도량 모두 존재하는 경우
             // 매수량이 매도량보다 큰 경우
-            // 순매수(매수-매도)금액이 100M krw 이상
+            // 순매수(매수-매도)금액이 50M krw 이상
             if (tickers[i].volumeRank < 5
                 && tickers[i].priceGap > 0.8
                 //&& tickers[i].volumeRankGap > 2
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
                 && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2
-                && tickers[i].volumeGapPrice > 100000000) {
+                && tickers[i].volumeGapPrice > 50000000) {
                     rtnMsg += "1 [" + tickers[i].pair + "] : " + tickers[i].price + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
 
@@ -323,13 +296,13 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
             // 순위상승 이전순위에 비해 10위 이상
             // 매수량 매도량 모두 존재하는 경우
             // 매수량이 매도량보다 2배 이상 큰 경우
-            // 순매수(매수-매도)금액이 100M krw 이상
+            // 순매수(매수-매도)금액이 50M krw 이상
             } else if (tickers[i].volumeRank < 30
                 && tickers[i].priceGap > 1
                 && tickers[i].volumeRankGap > 10
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
                 && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2
-                && tickers[i].volumeGapPrice > 100000000) {
+                && tickers[i].volumeGapPrice > 50000000) {
                 rtnMsg += "2 [" + tickers[i].pair + "] : " + Number(tickers[i].price) + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
 
@@ -338,13 +311,13 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
             // 순위상승 80위 이상
             // 매수량 매도량 모두 존재하는 경우
             // 매수량이 매도량보다 큰 경우
-            // 순매수(매수-매도)금액이 10M krw 이상
+            // 순매수(매수-매도)금액이 50M krw 이상
             } else if (tickers[i].volumeRank < 150
                 && tickers[i].priceGap > 0.8
                 && tickers[i].volumeRankGap > 80
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
                 && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2
-                && tickers[i].volumeGapPrice > 10000000) {
+                && tickers[i].volumeGapPrice > 5000000) {
                 rtnMsg += "3 [" + tickers[i].pair + "] : " + tickers[i].price + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
             }
@@ -360,11 +333,3 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
 
 });
 
-module.exports = {
-    'exchangeJob': exchangeJob,
-    'getTickers': getTickers,
-    'getTickers2': getTickers2,
-    'getTickers3': getTickers3,
-    'getTickers4': getTickers4,
-    'removeOldTickerJob': removeOldTickerJob
-};
