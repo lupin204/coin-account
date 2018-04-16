@@ -145,7 +145,7 @@ var getTickersBinance = schedule.scheduleJob('10 * * * * *', function(){
 var getTickersUpbit = schedule.scheduleJob('1 * * * * *', function(){
         var source = 'upbit';
     
-        var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/trade_volume';
+        var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
         var datePattern = /.$/;
         var tickersUpbit = com.tickersUpbit;
     
@@ -169,6 +169,7 @@ var getTickersUpbit = schedule.scheduleJob('1 * * * * *', function(){
                             tickerCollection.coin = elem_coin;      // ADA
                             tickerCollection.price = elem.tradePrice;
                             tickerCollection.volume = elem.tradeVolume;
+                            tickerCollection.accVolume = elem.accTradeVolume;
                             tickerCollection.bidVolume = elem.accBidVolume;
                             tickerCollection.askVolume = elem.accAskVolume;
                             tickerCollection.bidAsk = elem.askBid;
@@ -196,6 +197,7 @@ var getTickersUpbit = schedule.scheduleJob('1 * * * * *', function(){
                             nowTickerOfPair.volumeRank = tickerCollection.volumeRank;
                             nowTickerOfPair.askVolume = tickerCollection.askVolume;
                             nowTickerOfPair.bidVolume = tickerCollection.bidVolume;
+                            nowTickerOfPair.accVolume = tickerCollection.accVolume;
     
                             if (pair == 'BTC-KRW') {
                                 com.tickerUpbitBtc = tickerCollection.price;

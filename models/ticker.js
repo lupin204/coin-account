@@ -20,6 +20,7 @@ const tickerSchema = new Schema({
     coin: { type: String, required: true },    // ADA, XRP
     price: {type: String, required: false },     // 10000
     volume: {type: String, required: false },                     // 486.1245
+    accVolume: {type: String, required: false},     // accTradeVolume (trade_volume)
     bidAsk: {type: String, required: false },           // BID(매수)|ASK(매도)
     bidVolume: {type: String, required: false },           // 매수누적
     askVolume: {type: String, required: false },           // 매도누적
