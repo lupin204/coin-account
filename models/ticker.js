@@ -26,6 +26,7 @@ const tickerSchema = new Schema({
     tradeVolume: {type: String, required: false },           // 매수매도 합누적
     bidAskTime : {type: String, required: false },      // yyyymmddhh24mi00
     volumeRank : {type: String, required: false },      // 1
+    dataTimestamp : {type: String, required: false},    // server unixtimestamp
     created: { type: String, required: true},   // yyyymmddhh24mi00
     createdDate: {type: Date, required: true, default: Date.now }
 });

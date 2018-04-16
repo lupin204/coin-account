@@ -124,7 +124,7 @@ var getTickersBinance = schedule.scheduleJob('* * * 1 1 *', function(){
 
 // 10분에 1번씩 = '*/10 * * * *'
 //var getTickersUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
-var getTickersUpbit = schedule.scheduleJob('45 * * * * *', function(){
+var getTickersUpbit = schedule.scheduleJob('1 * * * * *', function(){
         var source = 'upbit';
     
         var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/trade_volume';
@@ -156,6 +156,7 @@ var getTickersUpbit = schedule.scheduleJob('45 * * * * *', function(){
                             tickerCollection.bidAsk = elem.askBid;
                             tickerCollection.bidAskTime = elem.tradeDate + elem.tradeTimeKst;
                             tickerCollection.volumeRank = elem.rank;
+                            tickerCollection.dataTimestamp = elem.timestamp;
                             //tickerCollection.risefall = elem.change;    // RISE || FALL (빨간불 파란불)
                             //tickerCollection.upbitObj = elem;
     
@@ -213,7 +214,7 @@ var getTickersUpbit = schedule.scheduleJob('45 * * * * *', function(){
     });
 
 //var getPumpUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
-var getPumpUpbit = schedule.scheduleJob('50 * * * * *', function(){
+var getPumpUpbit = schedule.scheduleJob('3 * * * * *', function(){
     var source = 'upbit';
 
     var tickers = com.tickersUpbit;
