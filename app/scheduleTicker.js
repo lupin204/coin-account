@@ -171,10 +171,10 @@ var getTickersBinance = schedule.scheduleJob('* * * 1 1 *', function(){
 
 // 10분에 1번씩 = '*/10 * * * *'
 //var getTickersUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
-    var getTickersUpbit = schedule.scheduleJob('3 * * * * *', function(){
+var getTickersUpbit = schedule.scheduleJob('38 * * * * *', function(){
         var source = 'upbit';
     
-        var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
+        var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/trade_volume';
         var datePattern = /.$/;
         var tickersUpbit = com.tickersUpbit;
     
@@ -276,13 +276,13 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
         for (var i=0; i<tickersLength; i++) {
 
             // #1.최종순위 5위 이내
-            // 가격상승 0.8%이상
+            // 가격상승 1%이상
             // 순위상승 해당없음
             // 매수량 매도량 모두 존재하는 경우
             // 매수량이 매도량보다 큰 경우
             // 순매수(매수-매도)금액이 50M krw 이상
             if (tickers[i].volumeRank < 5
-                && tickers[i].priceGap > 0.8
+                && tickers[i].priceGap > 1
                 //&& tickers[i].volumeRankGap > 2
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
                 && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2

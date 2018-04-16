@@ -229,13 +229,13 @@ router.get(['/pump/:pair'], function(req, res, next) {
             for (var i=0; i<tickersLength; i++) {
 
                 // #1.최종순위 5위 이내
-                // 가격상승 0.8%이상
+                // 가격상승 1%이상
                 // 순위상승 해당없음
                 // 매수량 매도량 모두 존재하는 경우
                 // 매수량이 매도량보다 큰 경우
                 // 순매수(매수-매도)금액이 50M krw 이상
                 if (tickers[i].volumeRank < 5
-                    && tickers[i].priceGap > 0.8
+                    && tickers[i].priceGap > 1
                     //&& tickers[i].volumeRankGap > 2
                     && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
                     && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2
@@ -367,6 +367,30 @@ router.get(['/getTickersTempUpbit/'], function(req, res, next) {
     }
 });
 
+router.get(['/changeRate/'], function(req, res, next) {
+    var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/change_rate';
+    var _res = res;
+    request(reqUrl, function(err, res, body){
+        if (!err && res.statusCode === 200) {
+            var json = JSON.parse(body);
+            console.log(json[0]);
+            _res.status(200).json(json[0]);
+        }
+    }); // end of request
+    
+});
+
+router.get(['/tradeVolume/'], function(req, res, next) {
+    var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/trade_volume';
+    var _res = res;
+    request(reqUrl, function(err, res, body){
+        if (!err && res.statusCode === 200) {
+            var json = JSON.parse(body);
+            console.log(json[0]);
+            _res.status(200).json(json[0]);
+        }
+    }); // end of request
+});
 
 
 module.exports = router;
