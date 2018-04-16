@@ -10,6 +10,7 @@ const http = require("http");
 const Exchange = require('../models/exchange');
 const Market = require('../models/market');
 const Ticker = require('../models/ticker');
+const Noschema = require('../models/noschema');
 
 // user-defined
 const constants = require('../app/constants');
@@ -96,71 +97,23 @@ var getTickersBinance = schedule.scheduleJob('* * * 1 1 *', function(){
                 for(key in json) {
                     var elem = json[key];
                     // BTC KRW 갯수 = 157
-                    if (elem.code.split(".")[2].split("-")[0] === 'KRW' || elem.code.split(".")[2].split("-")[0] === 'BTC') {
-                        var tickerCollection = new Ticker();
-                        //tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmmss').replace(datePattern,'0');
-                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
-                        tickerCollection.source = source;
-                        var elem_market = elem.code.split(".")[2].split("-")[0];    // CRIX.UPBIT.KRW-ADA
-                        var elem_coin = elem.code.split(".")[2].split("-")[1];
-                        tickerCollection.pair = elem_coin + "-" + elem_market;
-                        tickerCollection.market = elem_market;    // KRW
-                        tickerCollection.coin = elem_coin;      // ADA
-                        tickerCollection.price = elem.tradePrice;
-                        tickerCollection.volume = elem.tradeVolume;
-                        tickerCollection.bidVolume = elem.accBidVolume;
-                        tickerCollection.askVolume = elem.accAskVolume;
-                        tickerCollection.bidAsk = elem.askBid;
-                        tickerCollection.bidAskTime = elem.tradeDate + elem.tradeTimeKst;
-                        tickerCollection.volumeRank = elem.rank;
-                        //tickerCollection.risefall = elem.change;    // RISE || FALL (빨간불 파란불)
-                        //tickerCollection.upbitObj = elem;
+                    var tickerCollection = new NoSchema();
+                    tickerCollection = elem;
 
-                        if (com.isApp) {
-                            tickerCollection.save(function(err, tickerCollection){
-                                if(err) {
-                                    console.error(err);
-                                }
-                            });
-                        }
-
-                        var pair = elem_coin+"-"+elem_market;
-                        var nowTickerOfPair = {};
-                        nowTickerOfPair.created = tickerCollection.created;
-                        nowTickerOfPair.pair = tickerCollection.pair;
-                        nowTickerOfPair.market = tickerCollection.market;
-                        nowTickerOfPair.coin = tickerCollection.coin;
-                        nowTickerOfPair.price = tickerCollection.price;
-                        nowTickerOfPair.volumeRank = tickerCollection.volumeRank;
-                        nowTickerOfPair.askVolume = tickerCollection.askVolume;
-                        nowTickerOfPair.bidVolume = tickerCollection.bidVolume;
-
-                        if (pair == 'BTC-KRW') {
-                            com.tickerUpbitBtc = tickerCollection.price;
-                        }
-
-                        if (tickersUpbit[pair]) {
-                            // normal case - saved 2 ticks
-                            if (tickersUpbit[pair].length > 1) {
-                                tickersUpbit[pair].shift();
-                                tickersUpbit[pair].push(nowTickerOfPair);
-                            // saved 1 tick
-                            } else {
-                                tickersUpbit[pair].push(nowTickerOfPair);
+                    //if (com.isApp) {
+                        tickerCollection.save(function(err, tickerCollection){
+                            if(err) {
+                                console.error(err);
                             }
-                        // saved no tick
-                        } else {
-                            tickersUpbit[pair] = [];
-                            tickersUpbit[pair].push(nowTickerOfPair);
-                        }
+                        });
+                    //}
+
 
                         
 
-                    }
                 } // end of loop
             } 
         }
-        com.tickersUpbit = tickersUpbit;
     }); // end of request
 
 
@@ -171,7 +124,7 @@ var getTickersBinance = schedule.scheduleJob('* * * 1 1 *', function(){
 
 // 10분에 1번씩 = '*/10 * * * *'
 //var getTickersUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
-var getTickersUpbit = schedule.scheduleJob('38 * * * * *', function(){
+var getTickersUpbit = schedule.scheduleJob('45 * * * * *', function(){
         var source = 'upbit';
     
         var reqUrl = 'https://crix-api-endpoint.upbit.com/v1/crix/trends/trade_volume';
@@ -260,7 +213,7 @@ var getTickersUpbit = schedule.scheduleJob('38 * * * * *', function(){
     });
 
 //var getPumpUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
-var getPumpUpbit = schedule.scheduleJob('45 * * * * *', function(){
+var getPumpUpbit = schedule.scheduleJob('50 * * * * *', function(){
     var source = 'upbit';
 
     var tickers = com.tickersUpbit;
