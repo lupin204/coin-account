@@ -260,7 +260,7 @@ var getTickersUpbit = schedule.scheduleJob('38 * * * * *', function(){
     });
 
 //var getPumpUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
-var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
+var getPumpUpbit = schedule.scheduleJob('45 * * * * *', function(){
     var source = 'upbit';
 
     var tickers = com.tickersUpbit;
