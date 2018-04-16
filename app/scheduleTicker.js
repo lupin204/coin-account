@@ -10,7 +10,7 @@ const http = require("http");
 const Exchange = require('../models/exchange');
 const Market = require('../models/market');
 const Ticker = require('../models/ticker');
-const Noschema = require('../models/noschema');
+const BinanceTicker = require('../models/binance');
 
 // user-defined
 const constants = require('../app/constants');
@@ -82,35 +82,53 @@ var removeOldTickerJob = schedule.scheduleJob('30 0 0 * * *', function(){
 });
 
 // 10분에 1번씩 = '*/10 * * * *'
-var getTickersBinance = schedule.scheduleJob('* * * 1 1 *', function(){
-//var getTickersBinance = schedule.scheduleJob('1 * * * * *', function(){
+//var getTickersBinance = schedule.scheduleJob('* * * 1 1 *', function(){
+var getTickersBinance = schedule.scheduleJob('10 * * * * *', function(){
     var source = 'binance';
 
     var reqUrl = 'https://api.binance.com/api/v1/ticker/24hr';
-    //var tickersUpbit = com.tickersUpbit;
 
     request(reqUrl, function(err, res, body){
         if (!err && res.statusCode === 200) {
             var json = JSON.parse(body);
             if (Object.keys(json).length > 0) {
                 console.log("[" + moment().utcOffset(9).format('YYYY-MM-DD HH:mm') + "] " + Object.keys(json).length + " " + source + " tickers is selected");
-                for(key in json) {
-                    var elem = json[key];
-                    // BTC KRW 갯수 = 157
-                    var tickerCollection = new NoSchema();
-                    tickerCollection = elem;
-
-                    //if (com.isApp) {
-                        tickerCollection.save(function(err, tickerCollection){
-                            if(err) {
-                                console.error(err);
-                            }
-                        });
-                    //}
-
-
-                        
-
+                for(elem of json) {
+                    // BTC 갯수 = 120
+                    var symbol = elem.symbol;
+                    if (symbol.substr(-3) === 'BTC' || symbol === 'BTCUSDT' || symbol === 'BNBUSDT') {
+                        var tickerCollection = new BinanceTicker();
+                        tickerCollection.symbol = elem.symbol;
+                        tickerCollection.priceChange = elem.priceChange;
+                        tickerCollection.priceChangePercent = elem.priceChangePercent;
+                        tickerCollection.weightedAvgPrice = elem.weightedAvgPrice;
+                        tickerCollection.prevClosePrice = elem.prevClosePrice;
+                        tickerCollection.lastPrice = elem.lastPrice;
+                        tickerCollection.lastQty = elem.lastQty;
+                        tickerCollection.bidPrice = elem.bidPrice;
+                        tickerCollection.bidQty = elem.bidQty;
+                        tickerCollection.askPrice = elem.askPrice;
+                        tickerCollection.askQty = elem.askQty;
+                        tickerCollection.openPrice = elem.openPrice;
+                        tickerCollection.highPrice = elem.highPrice;
+                        tickerCollection.lowPrice = elem.lowPrice;
+                        tickerCollection.volume = elem.volume;
+                        tickerCollection.quoteVolume = elem.quoteVolume;
+                        tickerCollection.openTime = elem.openTime;
+                        tickerCollection.closeTime = elem.closeTime;
+                        tickerCollection.firstId = elem.firstId;
+                        tickerCollection.lastId = elem.lastId;
+                        tickerCollection.count = elem.count;
+                        tickerCollection.created = moment().utcOffset(9).format('YYYYMMDDHHmm00');
+    
+                        if (com.isApp) {
+                            tickerCollection.save(function(err, tickerCollection){
+                                if(err) {
+                                    console.error(err);
+                                }
+                            });
+                        }
+                    }
                 } // end of loop
             } 
         }
@@ -214,7 +232,7 @@ var getTickersUpbit = schedule.scheduleJob('1 * * * * *', function(){
     });
 
 //var getPumpUpbit = schedule.scheduleJob('* * * 1 1 *', function(){
-var getPumpUpbit = schedule.scheduleJob('3 * * * * *', function(){
+var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
     var source = 'upbit';
 
     var tickers = com.tickersUpbit;
@@ -286,4 +304,3 @@ var getPumpUpbit = schedule.scheduleJob('3 * * * * *', function(){
     }
 
 });
-
