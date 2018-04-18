@@ -253,29 +253,33 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
             // 가격상승 1%이상
             // 순위상승 해당없음
             // 매수량 매도량 모두 존재하는 경우
-            // 매수량이 매도량보다 큰 경우
+            // 매수량이 매도량보다 4배 큰 경우
+            // 이전틱 총거래량보다 4배 큰 경우
             // 순매수(매수-매도)금액이 50M krw 이상
             if (tickers[i].volumeRank < 5
-                && tickers[i].priceGap > 1
+                && tickers[i].priceGap > 0.6
                 //&& tickers[i].volumeRankGap > 2
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
-                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2
+                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 4
+                && tickers[i].toVolume / tickers[i].fromVolume > 4
                 && tickers[i].volumeGapPrice > 50000000) {
                     rtnMsg += "1 [" + tickers[i].pair + "] : " + tickers[i].price + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
 
 
             // #2.최종순위 30위 이내
-            // 가격상승 1%이상
+            // 가격상승 0.6%이상
             // 순위상승 이전순위에 비해 10위 이상
             // 매수량 매도량 모두 존재하는 경우
-            // 매수량이 매도량보다 2배 이상 큰 경우
+            // 매수량이 매도량보다 4배 큰 경우
+            // 이전틱 총거래량보다 4배 큰 경우
             // 순매수(매수-매도)금액이 50M krw 이상
             } else if (tickers[i].volumeRank < 30
-                && tickers[i].priceGap > 1
+                && tickers[i].priceGap > 0.6
                 && tickers[i].volumeRankGap > 10
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
-                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2
+                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 4
+                && tickers[i].toVolume / tickers[i].fromVolume > 4
                 && tickers[i].volumeGapPrice > 50000000) {
                 rtnMsg += "2 [" + tickers[i].pair + "] : " + Number(tickers[i].price) + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
@@ -284,14 +288,16 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
             // 가격상승 0.8% 이상
             // 순위상승 80위 이상
             // 매수량 매도량 모두 존재하는 경우
-            // 매수량이 매도량보다 큰 경우
-            // 순매수(매수-매도)금액이 50M krw 이상
+            // 매수량이 매도량보다 4배 큰 경우
+            // 이전틱 총거래량보다 4배 큰 경우
+            // 순매수(매수-매도)금액이 40M krw 이상
             } else if (tickers[i].volumeRank < 150
-                && tickers[i].priceGap > 0.8
-                && tickers[i].volumeRankGap > 80
+                && tickers[i].priceGap > 0.6
+                && tickers[i].volumeRankGap > 50
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
-                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 2
-                && tickers[i].volumeGapPrice > 5000000) {
+                && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 4
+                && tickers[i].toVolume / tickers[i].fromVolume > 4
+                && tickers[i].volumeGapPrice > 40000000) {
                 rtnMsg += "3 [" + tickers[i].pair + "] : " + tickers[i].price + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
             }
@@ -299,7 +305,7 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
 
         if (sendTelegram) {
             bot.telegrambot.sendMessage(bot.channedId, rtnMsg);
-            console.log(rtnMsg);
+            //console.log(rtnMsg);
         } else {
             //console.log(rtnMsg + " : no pump");
         }

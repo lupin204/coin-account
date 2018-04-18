@@ -1,6 +1,10 @@
 var com;
 com = {
 
+    changeRate : null,
+
+    changeTime : null,
+
     isApp : false,
 
     tickersUpbit : {},
@@ -40,7 +44,9 @@ com = {
             json[i].askVolumeGap = ""+Math.round(json[i].askVolume - json[i-1].askVolume);
             json[i].bidVolumeGapPrice = ""+Math.round(com.btcToKrw(json[i].bidVolumeGap, json[i].market) * json[i].price);
             json[i].askVolumeGapPrice = ""+Math.round(com.btcToKrw(json[i].askVolumeGap, json[i].market) * json[i].price);
+            json[i].accVolumeGap = ""+Math.round(json[i].accVolume - json[i-1].accVolume);
             json[i].volumeGap = ""+Math.round(json[i].bidVolumeGap - json[i].askVolumeGap);
+            //json[i].test = ""+Math.round(json[i].accVolumeGap - json[i].bidVolumeGap - json[i].askVolumeGap);
             json[i].volumeGapPrice = ""+Math.round(com.btcToKrw(json[i].volumeGap, json[i].market) * json[i].price);
 
             elem.bidVolumeGap = json[i].bidVolumeGap.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -48,6 +54,8 @@ com = {
             elem.bidVolumeGapPrice = json[i].bidVolumeGapPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             elem.askVolumeGapPrice = json[i].askVolumeGapPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             elem.volumeGap = json[i].volumeGap.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            elem.accVolumeGap = json[i].accVolumeGap.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            //elem.test = json[i].test;
             elem.volumeGapPrice = json[i].volumeGapPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             rtn.push(elem);
         }
@@ -63,6 +71,8 @@ com = {
             elem.coin = json[key][0].coin;
             elem.price = json[key][1].price;
             elem.fromPrice = json[key][0].price;
+            elem.fromVolume = json[key][0].accVolume;
+            elem.toVolume = json[key][1].accVolume;
             elem.fromVolumeRank = Number(json[key][0].volumeRank);
             elem.volumeRank = Number(json[key][1].volumeRank);
             elem.priceGapNum = com.toSatoshiFormat(json[key][1].price - json[key][0].price, json[key][0].market);
@@ -73,6 +83,7 @@ com = {
             elem.bidVolumeGapPrice = Math.round(com.btcToKrw(elem.bidVolumeGap, elem.market) * elem.price);
             elem.askVolumeGapPrice = Math.round(com.btcToKrw(elem.askVolumeGap, elem.market) * elem.price);
             elem.volumeGap = elem.bidVolumeGap - elem.askVolumeGap;
+            elem.accVolumeGap = Math.round(json[key][1].accVolume - json[key][0].accVolume);
             elem.volumeGapPrice = Math.round(com.btcToKrw(elem.volumeGap, elem.market) * elem.price);
             elem.volumeRankGap = Number(json[key][0].volumeRank - json[key][1].volumeRank);
             rtn.push(elem);

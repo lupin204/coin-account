@@ -313,7 +313,7 @@ router.get(['/check/:pair'], function(req, res, next) {
     .where('source').equals(source)
     .where('pair').equals(pair)
     .where('created').gte(fromDate).where('created').lte(toDate)
-    .sort({'created':1}).select('-_id created market price volume bidVolume askVolume volumeRank')
+    .sort({'created':1}).select('-_id created market price volume accVolume bidVolume askVolume volumeRank')
     .then(function(tickers){
         var newTickers = com.tempFunc(tickers);
         res.status(200).json(newTickers);
