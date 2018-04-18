@@ -79,6 +79,11 @@ var removeOldTickerJob = schedule.scheduleJob('30 0 0 * * *', function(){
         if (err) console.log(err);
         console.log("[removeOldTicker] " + twoDaysAgo + " : " + res.n + " ticker is removed.");
     });
+    BinanceTicker.remove( {'created': new RegExp(regExp)}, function(err, res) {
+        if (err) console.log(err);
+        console.log("[removeOldTicker] " + twoDaysAgo + " : " + res.n + " ticker is removed.");
+    });
+
 });
 
 // 10분에 1번씩 = '*/10 * * * *'
