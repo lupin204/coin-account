@@ -267,7 +267,7 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
                 && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 4
                 && tickers[i].toVolume / tickers[i].fromVolume > 4
-                && tickers[i].volumeGapPrice > 50000000) {
+                && tickers[i].volumeGapPrice > 10000000) {
                     rtnMsg += "1 [" + tickers[i].pair + "] : " + tickers[i].price + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
 
@@ -285,7 +285,7 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
                 && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 4
                 && tickers[i].toVolume / tickers[i].fromVolume > 4
-                && tickers[i].volumeGapPrice > 50000000) {
+                && tickers[i].volumeGapPrice > 10000000) {
                 rtnMsg += "2 [" + tickers[i].pair + "] : " + Number(tickers[i].price) + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
 
@@ -302,7 +302,7 @@ var getPumpUpbit = schedule.scheduleJob('5 * * * * *', function(){
                 && tickers[i].bidVolumeGap > 1 && tickers[i].askVolumeGap > 1
                 && tickers[i].bidVolumeGap > tickers[i].askVolumeGap && tickers[i].bidVolumeGap / tickers[i].askVolumeGap > 4
                 && tickers[i].toVolume / tickers[i].fromVolume > 4
-                && tickers[i].volumeGapPrice > 40000000) {
+                && tickers[i].volumeGapPrice > 10000000) {
                 rtnMsg += "3 [" + tickers[i].pair + "] : " + tickers[i].price + " - " + tickers[i].fromVolumeRank + "->" + tickers[i].volumeRank + "("+ (tickers[i].volumeGapPrice/10000000).toFixed(1) + "vol) : " + tickers[i].priceGap + "%  ( " + tickers[i].priceGapNum + " UP)\n";
                 sendTelegram = true;
             }

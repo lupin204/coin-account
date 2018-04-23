@@ -72,7 +72,7 @@ var nowBalanceJob = schedule.scheduleJob({second: 30, hour: [0,12]}, function(){
                             'satoshi': (nowSatoshi).toFixed(),
                             'price': (nowPrice * usdExchange).toFixed(2),
                             'estimate': (nowPrice * usdExchange * element.volume).toFixed(2),
-                            'modified': moment().utcOffset(9).format('YYYYMMDDHHmm')
+                            'modified': moment().utcOffset(9).format('YYYYMMDDHH')
                         };
 
                         Balance.findByIdAndUpdate(element.id, updateJson, {new: false});
