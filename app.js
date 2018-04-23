@@ -20,6 +20,7 @@ const adminApi = require('./routes/adminApi');
 //const schedule = require('./app/schedule');
 const com = require('./app/common.js');
 const scheduleTicker = require('./app/scheduleTicker');
+const scheduleBalance = require('./app/scheduleBalance');
 const mongoose = require('./app/mongo');
 //const telegrambot = require('./app/telegrambot');
 
