@@ -94,7 +94,60 @@ com = {
         if(num == undefined) val = '0';
         num += '';
         return num.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
+    },
+    binanceFunc : function(json) {
+        var rtn = [];
+        for (var i=1; i<json.length; i++) {
+            var elem = {};
+            elem.createdDate = json[i].createdDate;
+            /*
+            elem.priceChange = json[i].priceChange;
+            elem.priceChangePercent = json[i].priceChangePercent;
+            elem.weightedAvgPrice = json[i].weightedAvgPrice;
+            elem.prevClosePrice = json[i].prevClosePrice;
+            elem.lastPrice = json[i].lastPrice;
+            elem.lastQty = json[i].lastQty;
+            elem.bidPrice = json[i].bidPrice;
+            elem.bidQty = json[i].bidQty;
+            elem.askPrice = json[i].askPrice;
+            elem.askQty = json[i].askQty;
+            elem.openPrice = json[i].openPrice;
+            elem.highPrice = json[i].highPrice;
+            elem.lowPrice = json[i].lowPrice;
+            elem.volume = json[i].volume;
+            elem.quoteVolume = json[i].quoteVolume;
+            //elem.openTime = json[i].openTime;
+            //elem.closeTime = json[i].closeTime;
+            elem.firstId = json[i].firstId;
+            elem.lastId = json[i].lastId;
+            elem.count = json[i].count;
+            */
+
+            elem.priceChangeGap = (json[i].priceChange - json[i-1].priceChange).toFixed(2);
+            elem.priceChangePercentGap = (json[i].priceChangePercent - json[i-1].priceChangePercent).toFixed(2);
+            elem.weightedAvgPriceGap = (json[i].weightedAvgPrice - json[i-1].weightedAvgPrice).toFixed(2);
+            elem.prevClosePriceGap = (json[i].prevClosePrice - json[i-1].prevClosePrice).toFixed(2);
+            elem.lastPriceGap = (json[i].lastPrice - json[i-1].lastPrice).toFixed(2);
+            elem.lastQtGap = (json[i].lastQty - json[i-1].lastQty).toFixed(2);
+            elem.bidPriceGap = (json[i].bidPrice - json[i-1].bidPrice).toFixed(2);
+            elem.bidQtyGap = (json[i].bidQty - json[i-1].bidQty).toFixed(2);
+            elem.askPriceGap = (json[i].askPrice - json[i-1].askPrice).toFixed(2);
+            elem.askQtyGap = (json[i].askQty - json[i-1].askQty).toFixed(2);
+            elem.openPriceGap = (json[i].openPrice - json[i-1].openPrice).toFixed(2);
+            elem.highPriceGap = (json[i].highPrice - json[i-1].highPrice).toFixed(2);
+            elem.lowPriceGap = (json[i].lowPrice - json[i-1].lowPrice).toFixed(2);
+            elem.volumeGap = (json[i].volume - json[i-1].volume).toFixed(2);
+            elem.quoteVolumeGap = (json[i].quoteVolume - json[i-1].quoteVolume).toFixed(2);
+            //elem.openTimeGap = (json[i].openTime - json[i-1].openTime).toFixed(2);
+            //elem.closeTimeGap = (json[i].closeTime - json[i-1].closeTime).toFixed(2);
+            elem.firstIdGap = (json[i].firstId - json[i-1].firstId).toFixed(2);
+            elem.lastIdGap = (json[i].lastId - json[i-1].lastId).toFixed(2);
+            elem.countGap = (json[i].count - json[i-1].count).toFixed(2);
+
+            rtn.push(elem);
+        }
+        return rtn;
+    },
 }
 
 

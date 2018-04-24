@@ -12,11 +12,11 @@ Objectid
 Array
 */
 const binanceSchema = new Schema({
-    symbol: { type: String, required: true},    // upbit
-    priceChange: { type: String, required: false },    // BTC-KRW
-    priceChangePercent: { type: String, required: true},    // KRW, BTC
+    symbol: { type: String, required: true},    // BTCUSDT
+    priceChange: { type: String, required: false },    // 24시간 기준 price Gap (lastPrice - prevClosePrice)
+    priceChangePercent: { type: String, required: true},    // 24시간 기준 price Gap Percent (lastPrice / prevClosePrice )
     weightedAvgPrice: { type: String, required: true },    // ADA, XRP
-    prevClosePrice: {type: String, required: false },     // 10000
+    prevClosePrice: {type: String, required: false },     // 24hr 전 가격
     lastPrice: {type: String, required: false },                     // 486.1245
     lastQty: {type: String, required: false },           // BID(매수)|ASK(매도)
     bidPrice: {type: String, required: false },           // 매수누적

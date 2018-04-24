@@ -9,6 +9,8 @@ const moment = require('moment');
 const Exchange = require('../models/exchange');
 const Market = require('../models/market');
 const Ticker = require('../models/ticker');
+const Balance = require('../models/balance');
+const Binance = require('../models/binance');
 const com = require('../app/common.js');
 const bot = require('../app/telegrambot');
 
@@ -392,6 +394,86 @@ router.get(['/tradeVolume/'], function(req, res, next) {
     }); // end of request
 });
 
+router.get(['/getBalances/'], function(req, res, next) {
+    Balance.find()
+    .select('-_id source name coin price satoshi estimate')
+    .then(function(balances){
+        var json = {};
+        
+        var totalBalance = 0;
+        balances.forEach( balance => {
+            totalBalance = totalBalance + Number(balance.estimate);
+            var elemJson = {
+                name : balance.name,
+                price : balance.price,
+                satoshi : balance.satoshi,
+                estimate : balance.estimate,
+                volume : balance.volume
+            };
+            json[balance.name] = elemJson;
+        });
+        json.totalBalance = totalBalance;
+        res.status(200).json(json);
+    })
+    .catch(function(err){
+        console.error(err);
+    });
+});
+
+router.get(['/getBinances/:pair'], function(req, res, next) {
+    var pair = req.params.pair;
+    var fromDate = req.query.from;
+    var toDate = req.query.to;
+
+    fromDate = !fromDate ? '20180101000000' : fromDate.replace('-','').replace(/\s/gi,'');
+    toDate = !toDate ? '20181231235900' : toDate.replace('-','').replace(/\s/gi,'');
+    fromDate = (fromDate.length == 12) ? (fromDate+'00') : fromDate;
+    toDate = (toDate.length == 12) ? (toDate+'00') : toDate;
+
+    Binance.find()
+    .where('symbol').equals(pair)
+    .where('created').gte(fromDate).where('created').lte(toDate)
+    .sort({'created':1}).select('-_id -symbol -createdDate -openTime -closeTime -priceChangePercent -priceChange -prevClosePrice')
+    .then(function(binances){
+        binances.forEach(elem => {
+            async 
+            elem.plusminus = 'zero';
+            if (elem.weightedAvgPrice > elem.lastPrice) {
+                elem.plusminus = 'plus';
+            } else if (elem.weightedAvgPrice < elem.lastPrice) {
+                elem.plusminus = 'minus';
+            }
+            //elem.openTime = moment.unix(parseInt(elem.openTime/1000)).utcOffset(9).format('YYYYMMDDHHmmss');
+            //elem.closeTime = moment.unix(parseInt(elem.closeTime/1000)).utcOffset(9).format('YYYYMMDDHHmmss');
+        });
+        res.status(200).json(binances);
+    })
+    .catch(function(err){
+        console.error(err);
+    });
+});
+
+router.get(['/checkBinances/:pair'], function(req, res, next) {
+    var pair = req.params.pair;
+    var fromDate = req.query.from;
+    var toDate = req.query.to;
+
+    fromDate = !fromDate ? '20180101000000' : fromDate.replace('-','').replace(/\s/gi,'');
+    toDate = !toDate ? '20181231235900' : toDate.replace('-','').replace(/\s/gi,'');
+    fromDate = (fromDate.length == 12) ? (fromDate+'00') : fromDate;
+    toDate = (toDate.length == 12) ? (toDate+'00') : toDate;
+
+    Binance.find()
+    .where('symbol').equals(pair)
+    .where('created').gte(fromDate).where('created').lte(toDate)
+    .sort({'created':1}).select('-_id -symbol -createdDate')
+    .then(function(binances){
+        res.status(200).json(binances);
+    })
+    .catch(function(err){
+        console.error(err);
+    });
+});
 
 module.exports = router;
 
