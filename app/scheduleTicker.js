@@ -87,8 +87,8 @@ var removeOldTickerJob = schedule.scheduleJob('30 0 0 * * *', function(){
 });
 
 // 10분에 1번씩 = '*/10 * * * *'
-//var getTickersBinance = schedule.scheduleJob('* * * 1 1 *', function(){
-var getTickersBinance = schedule.scheduleJob('10 * * * * *', function(){
+var getTickersBinance = schedule.scheduleJob('* * * 1 1 *', function(){
+//var getTickersBinance = schedule.scheduleJob('10 * * * * *', function(){
     var source = 'binance';
 
     var reqUrl = 'https://api.binance.com/api/v1/ticker/24hr';
