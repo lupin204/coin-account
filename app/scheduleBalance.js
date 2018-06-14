@@ -62,9 +62,17 @@ var nowBalanceJob = schedule.scheduleJob({second: 30, minute: 10, hour: [9,21]},
                 request(reqUrl, function(err, res, body){
                     if (!err && res.statusCode === 200) {
                         var $ = cheerio.load(body);
-                        var nowPrice = $('#quote_price > .text-large2').text();
+                        //<span id="quote_price" data-currency-price="" data-usd="10.3042">
+                        var nowPrice = $('#quote_price').attr('data-usd');  // "10.3042"
                         nowPrice = nowPrice ? Number(nowPrice.replace(/,/gi, '')) : 0;
-                        var nowSatoshi = $(".text-gray.details-text-medium").eq(0).find('span').text();
+
+                        /*
+                        <span class="text-gray">
+                            <span data-format-price-crypto="" data-format-value="8.48577e-05">0.00008486</span>
+                            BTC
+                        </span>
+                        */
+                        var nowSatoshi = $(".text-gray").eq(2).find('span').text();
                         nowSatoshi = nowSatoshi ? nowSatoshi*100000000 : 0;
 
                         var updateJson = {
